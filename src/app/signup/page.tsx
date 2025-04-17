@@ -172,7 +172,7 @@ export default function SignupPage() {
                     onChange={handleChange}
                     className={`w-full px-4 py-2 border rounded-md shadow-sm ${
                       errors.firstName ? 'border-red-500' : 'border-gray-300'
-                    } focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent`}
+                    } focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent text-black`}
                   />
                   {errors.firstName && (
                     <p className="mt-1 text-sm text-red-600">{errors.firstName}</p>
@@ -191,7 +191,7 @@ export default function SignupPage() {
                     onChange={handleChange}
                     className={`w-full px-4 py-2 border rounded-md shadow-sm ${
                       errors.lastName ? 'border-red-500' : 'border-gray-300'
-                    } focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent`}
+                    } focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent text-black`}
                   />
                   {errors.lastName && (
                     <p className="mt-1 text-sm text-red-600">{errors.lastName}</p>
@@ -210,7 +210,7 @@ export default function SignupPage() {
                     onChange={handleChange}
                     className={`w-full px-4 py-2 border rounded-md shadow-sm ${
                       errors.email ? 'border-red-500' : 'border-gray-300'
-                    } focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent`}
+                    } focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent text-black`}
                   />
                   {errors.email && (
                     <p className="mt-1 text-sm text-red-600">{errors.email}</p>
@@ -229,7 +229,7 @@ export default function SignupPage() {
                     onChange={handleChange}
                     className={`w-full px-4 py-2 border rounded-md shadow-sm ${
                       errors.password ? 'border-red-500' : 'border-gray-300'
-                    } focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent`}
+                    } focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent text-black`}
                   />
                   {errors.password && (
                     <p className="mt-1 text-sm text-red-600">{errors.password}</p>
@@ -248,7 +248,7 @@ export default function SignupPage() {
                   onChange={handleChange}
                   className={`w-full px-4 py-2 border rounded-md shadow-sm ${
                     errors.fitnessGoal ? 'border-red-500' : 'border-gray-300'
-                  } focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent`}
+                  } focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent text-black`}
                 >
                   <option value="">Select a goal</option>
                   {fitnessGoals.map(goal => (

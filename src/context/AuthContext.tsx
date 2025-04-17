@@ -1,4 +1,3 @@
-// src/context/AuthContext.tsx
 'use client';
 
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
@@ -42,13 +41,16 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  // Check if user is logged in on initial load
+
   useEffect(() => {
     const checkUserLoggedIn = async () => {
       try {
+        // TEST DELAY
+        await new Promise((resolve) => setTimeout(resolve, 1500));
+  
         const res = await fetch('/api/user/profile');
         const data = await res.json();
-
+  
         if (data.success) {
           setUser(data.user);
         }
@@ -58,11 +60,40 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         setLoading(false);
       }
     };
-
+  
     checkUserLoggedIn();
   }, []);
+  
 
-  // Register user
+
+
+
+
+
+  // ✅ Check if user is logged in on initial load
+  // useEffect(() => {
+  //   const checkUserLoggedIn = async () => {
+  //     try {
+  //       const res = await fetch('/api/auth/me');
+  //       const data = await res.json();
+
+  //       if (res.ok && data.success) {
+  //         setUser(data.user);
+  //       } else {
+  //         setUser(null);
+  //       }
+  //     } catch (error) {
+  //       console.error('Failed to fetch session user:', error);
+  //       setUser(null);
+  //     } finally {
+  //       setLoading(false);
+  //     }
+  //   };
+
+  //   checkUserLoggedIn();
+  // }, []);
+
+  // ✅ Register user
   const register = async (userData: RegisterData) => {
     setLoading(true);
     setError(null);
@@ -70,9 +101,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     try {
       const res = await fetch('/api/auth/register', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(userData),
       });
 
@@ -91,7 +120,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
-  // Login user
+  // ✅ Login user
   const login = async (email: string, password: string) => {
     setLoading(true);
     setError(null);
@@ -99,9 +128,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     try {
       const res = await fetch('/api/auth/login', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, password }),
       });
 
@@ -120,31 +147,21 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
-  // In src/context/AuthContext.tsx
+  // ✅ Logout user
+  const logout = async () => {
+    setLoading(true);
+    try {
+      await fetch('/api/auth/logout');
+      setUser(null);
+      window.location.href = '/login';
+    } catch (error) {
+      console.error('Logout error:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
-// Logout user
-const logout = async () => {
-  setLoading(true);
-
-  try {
-    // Call the logout API to clear the cookie on the server
-    await fetch('/api/auth/logout');
-    
-    // Clear the user data from state
-    setUser(null);
-    
-    // Redirect to the login page after logout
-    window.location.href = '/login';
-    // Alternative: If you're using Next.js router
-    // router.push('/login');
-  } catch (error) {
-    console.error('Logout error:', error);
-  } finally {
-    setLoading(false);
-  }
-};
-
-  // Update user profile
+  // ✅ Update profile
   const updateProfile = async (profileData: UpdateProfileData) => {
     setLoading(true);
     setError(null);
@@ -152,9 +169,7 @@ const logout = async () => {
     try {
       const res = await fetch('/api/user/profile', {
         method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(profileData),
       });
 

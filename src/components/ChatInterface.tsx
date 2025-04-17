@@ -18,11 +18,10 @@ export default function ChatInterface() {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const sessionId = user ? user.email : 'guest';
 
-  // Load chat history
+  // Load chat history and set default prompt if no conversation exists
   useEffect(() => {
     const fetchPreviousConversation = async () => {
       try {
-
         const response = await fetch(`http://127.0.0.1:8000/get-conversation/${sessionId}`);
         const data = await response.json();
         if (data.conversation) {
@@ -33,6 +32,15 @@ export default function ChatInterface() {
             timestamp: new Date(msg.timestamp),
           }));
           setMessages(formattedMessages);
+        } else {
+          // No previous conversation exists, set a default message
+          const defaultMessage: Message = {
+            id: 'default-1',
+            role: 'assistant',
+            content: 'Hello! How can I assist you today with your fitness and nutrition goals?',
+            timestamp: new Date().toISOString(),
+          };
+          setMessages([defaultMessage]);
         }
       } catch (error) {
         console.error('Error fetching previous conversation:', error);

@@ -102,7 +102,7 @@ export default function LoginPage() {
             <form onSubmit={handleSubmit}>
               <div className="space-y-6">
                 <div>
-                  <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
+                  <label htmlFor="email" className="block text-sm font-medium text-black mb-1">
                     Email Address
                   </label>
                   <input
@@ -112,7 +112,7 @@ export default function LoginPage() {
                     value={formData.email}
                     onChange={handleChange}
                     className={`w-full px-4 py-2 border rounded-md shadow-sm ${
-                      errors.email ? 'border-red-300 focus:border-red-500 focus:ring-red-500' : 'border-gray-300 focus:border-green-500 focus:ring-green-500'
+                      errors.email ? 'border-red-300 focus:border-red-500 focus:ring-red-500' : 'border-gray-300 focus:border-green-500 focus:ring-green-500 text-black'
                     }`}
                   />
                   {errors.email && (
@@ -121,7 +121,7 @@ export default function LoginPage() {
                 </div>
                 
                 <div>
-                  <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-1">
+                  <label htmlFor="password" className="block text-sm font-medium text-black mb-1">
                     Password
                   </label>
                   <input
@@ -131,7 +131,7 @@ export default function LoginPage() {
                     value={formData.password}
                     onChange={handleChange}
                     className={`w-full px-4 py-2 border rounded-md shadow-sm ${
-                      errors.password ? 'border-red-300 focus:border-red-500 focus:ring-red-500' : 'border-gray-300 focus:border-green-500 focus:ring-green-500'
+                      errors.password ? 'border-red-300 focus:border-red-500 focus:ring-red-500' : 'border-gray-300 focus:ring-green-500 focus:border-green-500 text-black'
                     }`}
                   />
                   {errors.password && (

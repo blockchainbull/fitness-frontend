@@ -356,7 +356,7 @@ return (
         activeTab === 'profile'
           ? 'border-green-500 text-green-600'
           : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-      } whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm`}
+      } whitespace-nowrap py-4 px-1 border-b-2 font-medium text-black sm`}
     >
       Profile
     </button>
@@ -366,7 +366,7 @@ return (
         activeTab === 'account'
           ? 'border-green-500 text-green-600'
           : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-      } whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm`}
+      } whitespace-nowrap py-4 px-1 border-b-2 font-medium text-black sm`}
     >
       Account Preferences
     </button>
@@ -376,7 +376,7 @@ return (
         activeTab === 'bodyMetrics'
           ? 'border-green-500 text-green-600'
           : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-      } whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm`}
+      } whitespace-nowrap py-4 px-1 border-b-2 font-medium text-black sm`}
     >
       Body Metrics
     </button>
@@ -386,7 +386,7 @@ return (
         activeTab === 'password'
           ? 'border-green-500 text-green-600'
           : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-      } whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm`}
+      } whitespace-nowrap py-4 px-1 border-b-2 font-medium text-black sm`}
     >
       Password
     </button>
@@ -396,7 +396,7 @@ return (
         activeTab === 'data'
           ? 'border-green-500 text-green-600'
           : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-      } whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm`}
+      } whitespace-nowrap py-4 px-1 border-b-2 font-medium text-black sm`}
     >
       Data & Privacy
     </button>
@@ -423,7 +423,7 @@ return (
       
       <div className="mt-6 grid grid-cols-1 gap-y-6 gap-x-4 sm:grid-cols-6">
         <div className="sm:col-span-3">
-          <label htmlFor="height" className="block text-sm font-medium text-gray-700">
+          <label htmlFor="height" className="block text-sm font-medium text-black">
             Height
           </label>
           <div className="mt-1 relative rounded-md shadow-sm">
@@ -433,11 +433,11 @@ return (
               id="height"
               value={physicalStats.height}
               onChange={handlePhysicalStatsChange}
-              className="focus:ring-green-500 focus:border-green-500 block w-full pr-12 sm:text-sm border-gray-300 rounded-md"
+              className="focus:ring-green-800 focus:border-green-800 w-full pr-12 sm:text-black bg-gray-100 rounded-md"
               placeholder="0"
             />
             <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
-              <span className="text-gray-500 sm:text-sm">
+              <span className="text-black-500 sm:text-black sm">
                 {measurementUnit === 'metric' ? 'cm' : 'in'}
               </span>
             </div>
@@ -445,7 +445,7 @@ return (
         </div>
 
         <div className="sm:col-span-3">
-          <label htmlFor="weight" className="block text-sm font-medium text-gray-700">
+          <label htmlFor="weight" className="block text-sm font-medium text-black">
             Weight
           </label>
           <div className="mt-1 relative rounded-md shadow-sm">
@@ -455,11 +455,11 @@ return (
               id="weight"
               value={physicalStats.weight}
               onChange={handlePhysicalStatsChange}
-              className="focus:ring-green-500 focus:border-green-500 block w-full pr-12 sm:text-sm border-gray-300 rounded-md"
+              className="focus:ring-green-500 focus:border-green-500 w-full pr-12 sm:text-black bg-gray-100 rounded-md"
               placeholder="0"
             />
             <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
-              <span className="text-gray-500 sm:text-sm">
+              <span className="text-black-500 sm:text-black sm">
                 {measurementUnit === 'metric' ? 'kg' : 'lb'}
               </span>
             </div>
@@ -467,7 +467,7 @@ return (
         </div>
 
         <div className="sm:col-span-2">
-          <label htmlFor="age" className="block text-sm font-medium text-gray-700">
+          <label htmlFor="age" className="block text-sm font-medium text-black">
             Age
           </label>
           <div className="mt-1">
@@ -477,13 +477,13 @@ return (
               id="age"
               value={physicalStats.age}
               onChange={handlePhysicalStatsChange}
-              className="shadow-sm focus:ring-green-500 focus:border-green-500 block w-full sm:text-sm border-gray-300 rounded-md"
+              className="shadow-sm focus:ring-green-500 focus:border-green-500 w-full sm:text-black bg-gray-100 rounded-md"
             />
           </div>
         </div>
 
         <div className="sm:col-span-2">
-          <label htmlFor="gender" className="block text-sm font-medium text-gray-700">
+          <label htmlFor="gender" className="block text-sm font-medium text-black">
             Gender
           </label>
           <div className="mt-1">
@@ -492,7 +492,7 @@ return (
               name="gender"
               value={physicalStats.gender}
               onChange={handlePhysicalStatsChange}
-              className="shadow-sm focus:ring-green-500 focus:border-green-500 block w-full sm:text-sm border-gray-300 rounded-md"
+              className="shadow-sm focus:ring-green-500 focus:border-green-500 block w-full sm:text-black bg-gray-100 rounded-md"
             >
               <option value="male">Male</option>
               <option value="female">Female</option>
@@ -502,7 +502,7 @@ return (
         </div>
 
         <div className="sm:col-span-2">
-          <label htmlFor="activityLevel" className="block text-sm font-medium text-gray-700">
+          <label htmlFor="activityLevel" className="block text-sm font-medium text-black">
             Activity Level
           </label>
           <div className="mt-1">
@@ -511,7 +511,7 @@ return (
               name="activityLevel"
               value={physicalStats.activityLevel}
               onChange={handlePhysicalStatsChange}
-              className="shadow-sm focus:ring-green-500 focus:border-green-500 block w-full sm:text-sm border-gray-300 rounded-md"
+              className="shadow-sm focus:ring-green-500 focus:border-green-500 block w-full sm:text-black bg-gray-100 rounded-md"
             >
               <option value="sedentary">Sedentary (little or no exercise)</option>
               <option value="light">Light (1-3 days/week)</option>
@@ -562,14 +562,14 @@ return (
 {activeTab === 'profile' && (
   <div className="mt-6 bg-white shadow rounded-lg">
     <div className="px-4 py-5 sm:p-6">
-      <h3 className="text-lg font-medium leading-6 text-gray-900">Personal Information</h3>
-      <p className="mt-1 text-sm text-gray-500">
+      <h3 className="text-lg font-medium leading-6 text-black">Personal Information</h3>
+      <p className="mt-1 text-sm text-black">
         Update your personal information and preferences.
       </p>
       
       <div className="mt-6 grid grid-cols-1 gap-y-6 gap-x-4 sm:grid-cols-6">
         <div className="sm:col-span-3">
-          <label htmlFor="name" className="block text-sm font-medium text-gray-700">
+          <label htmlFor="name" className="block text-med font-medium text-black">
             Full Name
           </label>
           <div className="mt-1">
@@ -579,13 +579,13 @@ return (
               id="name"
               value={profileData.name}
               onChange={(e) => setProfileData({...profileData, name: e.target.value})}
-              className="shadow-sm focus:ring-green-500 focus:border-green-500 block w-full sm:text-sm border-gray-300 rounded-md"
+              className="shadow-sm focus:ring-green-500 focus:border-green-500 block w-full sm:text-black bg-gray-100 rounded-md"
             />
           </div>
         </div>
 
         <div className="sm:col-span-3">
-          <label htmlFor="email" className="block text-sm font-medium text-gray-700">
+          <label htmlFor="email" className="block text-med font-medium text-black">
             Email Address
           </label>
           <div className="mt-1">
@@ -595,14 +595,14 @@ return (
               id="email"
               value={profileData.email}
               disabled
-              className="shadow-sm bg-gray-50 text-gray-500 block w-full sm:text-sm border-gray-300 rounded-md cursor-not-allowed"
+              className="bg-gray-50 text-black w-full sm:text-black bg-gray-100 rounded-md cursor-not-allowed"
             />
             <p className="mt-1 text-xs text-gray-500">Email cannot be changed</p>
           </div>
         </div>
 
         <div className="sm:col-span-6">
-          <label htmlFor="fitnessGoal" className="block text-sm font-medium text-gray-700">
+          <label htmlFor="fitnessGoal" className="block text-med font-medium text-black">
             Primary Fitness Goal
           </label>
           <div className="mt-1">
@@ -611,7 +611,7 @@ return (
               name="fitnessGoal"
               value={profileData.fitnessGoal}
               onChange={(e) => setProfileData({...profileData, fitnessGoal: e.target.value})}
-              className="shadow-sm focus:ring-green-500 focus:border-green-500 block w-full sm:text-sm border-gray-300 rounded-md"
+              className="shadow-sm focus:ring-green-500 focus:border-green-500 block w-full sm:text-black bg-gray-100 rounded-md"
             >
               <option value="">Select a goal</option>
               <option value="weightLoss">Weight Loss</option>
@@ -625,7 +625,7 @@ return (
         </div>
 
         <div className="sm:col-span-6">
-          <label className="block text-sm font-medium text-gray-700">
+          <label className="block text-med font-med text-black">
             Dietary Preferences
           </label>
           <div className="mt-2 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
@@ -684,28 +684,13 @@ return (
       
       <div className="mt-6 space-y-6">
         <div>
-          <h4 className="text-sm font-medium text-gray-700">Theme</h4>
-          <select
-            id="theme"
-            name="theme"
-            value={theme}
-            onChange={handleThemeChange}
-            className="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-green-500 focus:border-green-500 sm:text-sm rounded-md"
-          >
-            <option value="system">System Default</option>
-            <option value="light">Light</option>
-            <option value="dark">Dark</option>
-          </select>
-        </div>
-        
-        <div>
-          <h4 className="text-sm font-medium text-gray-700">Measurement Units</h4>
+          <h4 className="text-med font-medium text-black">Measurement Units</h4>
           <select
             id="units"
             name="units"
             value={measurementUnit}
             onChange={handleUnitChange}
-            className="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-green-500 focus:border-green-500 sm:text-sm rounded-md"
+            className="mt-1 block w-full pl-3 pr-10 py-2 text-base bg-gray-100 focus:outline-none focus:ring-green-500 focus:border-green-500 sm:text-black rounded-md"
           >
             <option value="metric">Metric (kg, cm)</option>
             <option value="imperial">Imperial (lb, in)</option>
