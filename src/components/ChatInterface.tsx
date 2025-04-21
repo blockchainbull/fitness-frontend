@@ -16,13 +16,13 @@ export default function ChatInterface() {
   const [inputMessage, setInputMessage] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
-  const sessionId = user ? user.email : 'guest';
+  const userId = user ? user.id : 'guest';
 
   // Load chat history and set default prompt if no conversation exists
   useEffect(() => {
     const fetchPreviousConversation = async () => {
       try {
-        const response = await fetch(`http://127.0.0.1:8000/get-conversation/${sessionId}`);
+        const response = await fetch(`http://127.0.0.1:8000/get-conversation/${userId}`);
         const data = await response.json();
         if (data.conversation) {
           const formattedMessages = data.conversation.map((msg: any) => ({
@@ -48,12 +48,13 @@ export default function ChatInterface() {
     };
 
     fetchPreviousConversation();
-  }, [sessionId]);
+  }, [userId]);
 
   const handleSendMessage = async (e: React.FormEvent) => {
     e.preventDefault();
 
     if (inputMessage.trim() === '') return;
+
 
     const userMessage: Message = {
       id: Date.now().toString(),
@@ -70,8 +71,7 @@ export default function ChatInterface() {
       const data = {
         user_prompt: userMessage.content,
         agent_name: 'health_coach',
-        userId: user?.id || '',
-        session_id: sessionId,
+        user_id: userId,
       };
 
       const response = await fetch('http://127.0.0.1:8000/submit-prompt', {
@@ -82,6 +82,8 @@ export default function ChatInterface() {
         body: JSON.stringify(data),
       });
 
+
+      console.log(JSON.stringify(data));
       if (!response.ok) throw new Error('Failed to get AI response');
 
       const responseData = await response.json();
