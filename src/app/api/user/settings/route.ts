@@ -2,16 +2,13 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
 import jwt from 'jsonwebtoken';
-import dbConnect from '@/lib/db';
+import prisma from '@/lib/db';
 import User from '@/models/User';
 
 const JWT_SECRET = process.env.JWT_SECRET || 'your_jwt_secret_key_change_this_in_production';
 
 export async function PUT(req: NextRequest) {
-  try {
-    // Connect to database
-    await dbConnect();
-    
+  try {    
     // Get token from cookies
     const cookieStore = cookies();
     const token = cookieStore.get('token')?.value;
@@ -36,25 +33,26 @@ export async function PUT(req: NextRequest) {
     } = await req.json();
 
     // Find and update user - we need to update the User model to include these fields
-    const updatedUser = await User.findByIdAndUpdate(
-      decoded.id,
-      { 
+    const updatedUser = await prisma.user.update({
+      where: {
+        id: decoded.id,
+      },
+      data: {
         preferences: {
           notifications,
           privacy,
           theme,
-          measurementUnit
+          measurementUnit,
         },
         physicalStats: {
           height: physicalStats.height,
           weight: physicalStats.weight,
           age: physicalStats.age,
           gender: physicalStats.gender,
-          activityLevel: physicalStats.activityLevel
-        }
+          activityLevel: physicalStats.activityLevel,
+        },
       },
-      { new: true, runValidators: true }
-    );
+    });
     
     if (!updatedUser) {
       return NextResponse.json(

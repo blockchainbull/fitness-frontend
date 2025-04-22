@@ -2,16 +2,14 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
 import jwt from 'jsonwebtoken';
-import dbConnect from '@/lib/db';
+import prisma from '@/lib/db';
 import User from '@/models/User';
 
 const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key';
 
 export async function GET(req: NextRequest) {
   try {
-    // Connect to database
-    await dbConnect();
-    
+  
     // Get token from cookies
     const cookieStore = await cookies();
     const token = cookieStore.get('token')?.value;
@@ -27,7 +25,9 @@ export async function GET(req: NextRequest) {
     const decoded = jwt.verify(token, JWT_SECRET) as jwt.JwtPayload & { id: string };
     
     // Find user by id
-    const user = await User.findById(decoded.id);
+    const user = await prisma.user.findUnique({
+      where: { id: decoded.id },
+    });
     
     if (!user) {
       return NextResponse.json(
@@ -40,7 +40,7 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({
       success: true,
       user: {
-        id: user._id,
+        id: user.id,
         name: user.name,
         email: user.email,
         fitnessGoal: user.fitnessGoal,
@@ -67,8 +67,6 @@ export async function GET(req: NextRequest) {
 
 export async function PUT(req: NextRequest) {
   try {
-    // Connect to database
-    await dbConnect();
     
     // Get token from cookies
     const cookieStore = cookies();
@@ -88,11 +86,17 @@ export async function PUT(req: NextRequest) {
     const { name, fitnessGoal, dietaryPreferences } = await req.json();
 
     // Find and update user
-    const updatedUser = await User.findByIdAndUpdate(
-      decoded.id,
-      { name, fitnessGoal, dietaryPreferences },
-      { new: true, runValidators: true }
-    );
+    const updatedUser = await prisma.user.update({
+      where: {
+        id: decoded.id,
+      },
+      data: {
+        name,
+        fitnessGoal,
+        dietaryPreferences,
+      },
+    });
+    
     
     if (!updatedUser) {
       return NextResponse.json(

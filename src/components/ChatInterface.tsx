@@ -1,3 +1,4 @@
+// src/components/ChatInterface.tsx
 'use client';
 
 import { useState, useRef, useEffect } from 'react';
@@ -22,14 +23,18 @@ export default function ChatInterface() {
   useEffect(() => {
     const fetchPreviousConversation = async () => {
       try {
+        console.log("Fetching conversation for user:", userId);
+        // Fix the template string syntax - use backticks instead of double quotes
         const response = await fetch(`http://127.0.0.1:8000/get-conversation/${userId}`);
         const data = await response.json();
-        if (data.conversation) {
+        console.log("Conversation data received:", data);
+        
+        if (data.conversation && data.conversation.length > 0) {
           const formattedMessages = data.conversation.map((msg: any) => ({
-            id: msg.timestamp,
-            role: msg.role,
-            content: msg.content,
-            timestamp: new Date(msg.timestamp),
+            id: msg.timestamp || Date.now().toString(),
+            role: msg.role || 'assistant',
+            content: msg.content || '',
+            timestamp: msg.timestamp || new Date().toISOString(),
           }));
           setMessages(formattedMessages);
         } else {
@@ -44,9 +49,17 @@ export default function ChatInterface() {
         }
       } catch (error) {
         console.error('Error fetching previous conversation:', error);
+        // Still show default message on error
+        const defaultMessage: Message = {
+          id: 'default-1',
+          role: 'assistant',
+          content: 'Hello! How can I assist you today with your fitness and nutrition goals?',
+          timestamp: new Date().toISOString(),
+        };
+        setMessages([defaultMessage]);
       }
     };
-
+  
     fetchPreviousConversation();
   }, [userId]);
 
@@ -253,6 +266,6 @@ export default function ChatInterface() {
           </button>
         </form>
       </div>
-    </div>
-  );
+    </div>
+  );
 }
