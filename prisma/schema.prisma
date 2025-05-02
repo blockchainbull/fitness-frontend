@@ -14,15 +14,18 @@ model User {
   password           String
   fitnessGoal        String?
   dietaryPreferences String[]
+  healthMetrics      Json?      // Stores bmr, tdee, bmi
   createdAt          DateTime    @default(now())
   updatedAt          DateTime    @updatedAt
-  physicalStats      Json?
-  preferences        Json?
+  physicalStats      Json?      // Stores height, weight, age, gender, activityLevel
+  preferences        Json?      // Stores notification prefs, privacy settings, theme, measurementUnit
   version                 Int         @default(0)
   
   // Add these relations
   notes              UserNotes[]
   conversations      Conversation[]
+
+  @@map("users")
 }
 
 model UserNotes {

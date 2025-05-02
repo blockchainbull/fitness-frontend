@@ -15,6 +15,11 @@ export interface IUser extends mongoose.Document {
     gender: string;
     activityLevel: string;
   };
+  healthMetrics?: {
+    bmr: number;
+    tdee: number;
+    bmi: number;
+  };
   preferences?: {
     notifications: {
       email: boolean;
@@ -67,16 +72,21 @@ const UserSchema = new mongoose.Schema(
       height: Number,
       weight: Number,
       age: Number,
-    gender: {
+      gender: {
         type: String,
         enum: ['male', 'female', 'other'],
         default: 'male'
       },
-    activityLevel: {
+      activityLevel: {
         type: String,
         enum: ['sedentary', 'light', 'moderate', 'active', 'veryActive'],
         default: 'moderate'
       }
+    },
+    healthMetrics: {
+      bmr: Number,  // Basal Metabolic Rate
+      tdee: Number, // Total Daily Energy Expenditure
+      bmi: Number   // Body Mass Index
     },
     preferences: {
       notifications: {
@@ -84,16 +94,16 @@ const UserSchema = new mongoose.Schema(
         app: { type: Boolean, default: true },
         marketing: { type: Boolean, default: false }
       },
-    privacy: {
+      privacy: {
         shareProgress: { type: Boolean, default: true },
         publicProfile: { type: Boolean, default: false }
       },
-    theme: {
+      theme: {
         type: String,
         enum: ['system', 'light', 'dark'],
         default: 'system'
       },
-    measurementUnit: {
+      measurementUnit: {
         type: String,
         enum: ['metric', 'imperial'],
         default: 'metric'
