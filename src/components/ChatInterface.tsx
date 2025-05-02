@@ -24,7 +24,6 @@ export default function ChatInterface() {
     const fetchPreviousConversation = async () => {
       try {
         console.log("Fetching conversation for user:", userId);
-        // Fix the template string syntax - use backticks instead of double quotes
         const response = await fetch(`http://127.0.0.1:8000/get-conversation/${userId}`);
         const data = await response.json();
         console.log("Conversation data received:", data);
@@ -42,7 +41,7 @@ export default function ChatInterface() {
           const defaultMessage: Message = {
             id: 'default-1',
             role: 'assistant',
-            content: 'Hello! How can I assist you today with your fitness and nutrition goals?',
+            content: `Hello ${user?.name || 'there'}! How can I assist you today with your fitness and nutrition goals?`,
             timestamp: new Date().toISOString(),
           };
           setMessages([defaultMessage]);
@@ -61,13 +60,12 @@ export default function ChatInterface() {
     };
   
     fetchPreviousConversation();
-  }, [userId]);
+  }, [userId, user]);
 
   const handleSendMessage = async (e: React.FormEvent) => {
     e.preventDefault();
 
     if (inputMessage.trim() === '') return;
-
 
     const userMessage: Message = {
       id: Date.now().toString(),
@@ -95,8 +93,7 @@ export default function ChatInterface() {
         body: JSON.stringify(data),
       });
 
-
-      console.log(JSON.stringify(data));
+      console.log("Request sent:", JSON.stringify(data));
       if (!response.ok) throw new Error('Failed to get AI response');
 
       const responseData = await response.json();
@@ -123,6 +120,22 @@ export default function ChatInterface() {
     } finally {
       setIsLoading(false);
     }
+  };
+
+  // Safely render HTML content by decoding any HTML entities first
+  const renderMessageContent = (content: string, role: string) => {
+    // Only process assistant messages
+    if (role === 'user') {
+      return content;
+    }
+    
+    // Create a temporary div to decode HTML entities
+    const tempDiv = document.createElement('div');
+    tempDiv.innerHTML = content;
+    const decodedContent = tempDiv.textContent || tempDiv.innerText || '';
+    
+    // Return the decoded content in a way that React can render it
+    return <div dangerouslySetInnerHTML={{ __html: decodedContent }} />;
   };
 
   useEffect(() => {
@@ -191,7 +204,7 @@ export default function ChatInterface() {
               {message.role === 'user' ? (
                 message.content
               ) : (
-                <div dangerouslySetInnerHTML={{ __html: message.content }} />
+                renderMessageContent(message.content, message.role)
               )}
             </div>
             <div
@@ -266,6 +279,6 @@ export default function ChatInterface() {
           </button>
         </form>
       </div>
-    </div>
-  );
+    </div>
+  );
 }

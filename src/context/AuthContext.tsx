@@ -2,12 +2,43 @@
 
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 
+type PhysicalStats = {
+  height: number;
+  weight: number;
+  age: number;
+  gender: string;
+  activityLevel: string;
+};
+
+type HealthMetrics = {
+  bmr: number;
+  tdee: number;
+  bmi: number;
+};
+
+type Preferences = {
+  notifications: {
+    email: boolean;
+    app: boolean;
+    marketing: boolean;
+  };
+  privacy: {
+    shareProgress: boolean;
+    publicProfile: boolean;
+  };
+  theme: string;
+  measurementUnit: string;
+};
+
 type User = {
   id: string;
   name: string;
   email: string;
   fitnessGoal?: string;
   dietaryPreferences?: string[];
+  physicalStats?: PhysicalStats;
+  healthMetrics?: HealthMetrics;
+  preferences?: Preferences;
 };
 
 type AuthContextType = {
@@ -18,6 +49,7 @@ type AuthContextType = {
   login: (email: string, password: string) => Promise<void>;
   logout: () => Promise<void>;
   updateProfile: (profileData: UpdateProfileData) => Promise<void>;
+  updateSettings: (settingsData: UpdateSettingsData) => Promise<void>;
 };
 
 type RegisterData = {
@@ -29,9 +61,14 @@ type RegisterData = {
 };
 
 type UpdateProfileData = {
-  name?: string;
   fitnessGoal?: string;
   dietaryPreferences?: string[];
+};
+
+type UpdateSettingsData = {
+  physicalStats?: PhysicalStats;
+  healthMetrics?: HealthMetrics;
+  preferences?: Preferences;
 };
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -41,13 +78,10 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-
   useEffect(() => {
     const checkUserLoggedIn = async () => {
       try {
-        // TEST DELAY
-        await new Promise((resolve) => setTimeout(resolve, 1500));
-  
+        // Check if user is already logged in
         const res = await fetch('/api/user/profile');
         const data = await res.json();
   
@@ -64,36 +98,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     checkUserLoggedIn();
   }, []);
   
-
-
-
-
-
-
-  // ✅ Check if user is logged in on initial load
-  // useEffect(() => {
-  //   const checkUserLoggedIn = async () => {
-  //     try {
-  //       const res = await fetch('/api/auth/me');
-  //       const data = await res.json();
-
-  //       if (res.ok && data.success) {
-  //         setUser(data.user);
-  //       } else {
-  //         setUser(null);
-  //       }
-  //     } catch (error) {
-  //       console.error('Failed to fetch session user:', error);
-  //       setUser(null);
-  //     } finally {
-  //       setLoading(false);
-  //     }
-  //   };
-
-  //   checkUserLoggedIn();
-  // }, []);
-
-  // ✅ Register user
+  // Register user
   const register = async (userData: RegisterData) => {
     setLoading(true);
     setError(null);
@@ -120,7 +125,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
-  // ✅ Login user
+  // Login user
   const login = async (email: string, password: string) => {
     setLoading(true);
     setError(null);
@@ -147,7 +152,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
-  // ✅ Logout user
+  // Logout user
   const logout = async () => {
     setLoading(true);
     try {
@@ -161,7 +166,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
-  // ✅ Update profile
+  // Update profile
   const updateProfile = async (profileData: UpdateProfileData) => {
     setLoading(true);
     setError(null);
@@ -179,7 +184,34 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         throw new Error(data.message || 'Failed to update profile');
       }
 
-      setUser(data.user);
+      setUser(prevUser => prevUser ? { ...prevUser, ...data.user } : data.user);
+    } catch (error) {
+      setError((error as Error).message);
+      throw error;
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Update settings (including physical stats, health metrics, and preferences)
+  const updateSettings = async (settingsData: UpdateSettingsData) => {
+    setLoading(true);
+    setError(null);
+
+    try {
+      const res = await fetch('/api/user/settings', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(settingsData),
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        throw new Error(data.message || 'Failed to update settings');
+      }
+
+      setUser(prevUser => prevUser ? { ...prevUser, ...data.user } : data.user);
     } catch (error) {
       setError((error as Error).message);
       throw error;
@@ -198,6 +230,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         login,
         logout,
         updateProfile,
+        updateSettings,
       }}
     >
       {children}
