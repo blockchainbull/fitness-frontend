@@ -1,7 +1,7 @@
 // src/components/ChatInterface.tsx
 'use client';
 
-import { useState, useRef, useEffect } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { useAuth } from '@/context/AuthContext';
 
 interface Message {
@@ -26,7 +26,6 @@ export default function ChatInterface() {
         console.log("Fetching conversation for user:", userId);
         const response = await fetch(`http://127.0.0.1:8000/get-conversation/${userId}`);
         const data = await response.json();
-        console.log("Conversation data received:", data);
         
         if (data.conversation && data.conversation.length > 0) {
           const formattedMessages = data.conversation.map((msg: any) => ({
@@ -93,7 +92,6 @@ export default function ChatInterface() {
         body: JSON.stringify(data),
       });
 
-      console.log("Request sent:", JSON.stringify(data));
       if (!response.ok) throw new Error('Failed to get AI response');
 
       const responseData = await response.json();
@@ -122,25 +120,99 @@ export default function ChatInterface() {
     }
   };
 
-  // Safely render HTML content by decoding any HTML entities first
+  // Process and enhance the HTML content
+  const processHtmlContent = (html: string) => {
+    // This function adds additional CSS classes to elements within the HTML
+    let processedHtml = html;
+    
+    // Add styling for headings
+    processedHtml = processedHtml.replace(/<h1>/g, '<h1 class="text-xl font-bold mb-2">');
+    processedHtml = processedHtml.replace(/<h2>/g, '<h2 class="text-lg font-bold mb-2">');
+    processedHtml = processedHtml.replace(/<h3>/g, '<h3 class="text-base font-bold mb-2">');
+    
+    // Add styling for paragraphs
+    processedHtml = processedHtml.replace(/<p>/g, '<p class="mb-2">');
+    
+    // Add styling for lists
+    processedHtml = processedHtml.replace(/<ul>/g, '<ul class="list-disc pl-5 mb-2 space-y-1">');
+    processedHtml = processedHtml.replace(/<ol>/g, '<ol class="list-decimal pl-5 mb-2 space-y-1">');
+    
+    // Add styling for list items
+    processedHtml = processedHtml.replace(/<li>/g, '<li class="mb-1">');
+    
+    // Add styling for strong/bold text
+    processedHtml = processedHtml.replace(/<strong>/g, '<strong class="font-bold">');
+    
+    return processedHtml;
+  };
+
+  // Safely render HTML content
   const renderMessageContent = (content: string, role: string) => {
-    // Only process assistant messages
     if (role === 'user') {
-      return content;
+      return <p className="text-white">{content}</p>;
     }
     
-    // Create a temporary div to decode HTML entities
-    const tempDiv = document.createElement('div');
-    tempDiv.innerHTML = content;
-    const decodedContent = tempDiv.textContent || tempDiv.innerText || '';
-    
-    // Return the decoded content in a way that React can render it
-    return <div dangerouslySetInnerHTML={{ __html: decodedContent }} />;
+    // Process assistant's HTML content to add styling
+    const enhancedContent = processHtmlContent(content);
+    return (
+      <div 
+        className="ai-response text-gray-800 text-left" 
+        dangerouslySetInnerHTML={{ __html: enhancedContent }} 
+      />
+    );
   };
+
+  // Add global styles for the chat interface
+  useEffect(() => {
+    // Add styles to make the chat more like the screenshots
+    const style = document.createElement('style');
+    style.innerHTML = `
+      .ai-response h1, .ai-response h2, .ai-response h3 { 
+        font-weight: bold;
+        margin-bottom: 0.5rem;
+      }
+      .ai-response ul, .ai-response ol {
+        padding-left: 1.25rem;
+        margin-bottom: 0.5rem;
+      }
+      .ai-response ul {
+        list-style-type: disc;
+      }
+      .ai-response ol {
+        list-style-type: decimal;
+      }
+      .ai-response li {
+        margin-bottom: 0.25rem;
+      }
+      .ai-response p {
+        margin-bottom: 0.5rem;
+      }
+      .ai-response strong {
+        font-weight: bold;
+      }
+    `;
+    document.head.appendChild(style);
+    
+    return () => {
+      document.head.removeChild(style);
+    };
+  }, []);
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
+
+  // Format time from ISO string
+  const formatTime = (isoString: string) => {
+    try {
+      return new Date(isoString).toLocaleTimeString([], {
+        hour: '2-digit',
+        minute: '2-digit',
+      });
+    } catch (e) {
+      return '';
+    }
+  };
 
   // Only render the component client-side
   const [isMounted, setIsMounted] = useState(false);
@@ -149,7 +221,6 @@ export default function ChatInterface() {
   }, []);
 
   if (!isMounted) {
-    // Return a placeholder with the same structure but no content during SSR
     return (
       <div className="flex flex-col bg-white rounded-lg shadow-lg h-[600px] max-w-3xl mx-auto">
         <div className="bg-green-600 text-white px-4 py-3 rounded-t-lg flex items-center">
@@ -187,41 +258,40 @@ export default function ChatInterface() {
 
       {/* Chat messages */}
       <div className="flex-1 p-4 overflow-y-auto">
-        {messages.map((message) => (
-          <div
-            key={message.id}
-            className={`max-w-xs md:max-w-md lg:max-w-lg xl:max-w-xl mb-3 ${
-              message.role === 'user' ? 'ml-auto' : 'mr-auto'
-            }`}
-          >
+        <div className="space-y-3">
+          {messages.map((message) => (
             <div
-              className={`p-3 rounded-lg ${
-                message.role === 'user'
-                  ? 'bg-green-500 text-white rounded-br-none'
-                  : 'bg-gray-100 text-gray-800 rounded-bl-none'
+              key={message.id}
+              className={`flex ${
+                message.role === 'user' ? 'justify-end' : 'justify-start'
               }`}
             >
-              {message.role === 'user' ? (
-                message.content
-              ) : (
-                renderMessageContent(message.content, message.role)
-              )}
+              <div
+                className={`${
+                  message.role === 'user' 
+                    ? 'max-w-xs md:max-w-sm bg-green-500 text-white rounded-lg rounded-br-none'
+                    : 'max-w-md md:max-w-lg bg-gray-100 text-gray-800 rounded-lg rounded-bl-none'
+                } px-4 py-3`}
+              >
+                {renderMessageContent(message.content, message.role)}
+                
+                {/* Message timestamp - inside bubble for cleaner look */}
+                <div
+                  className={`text-xs ${
+                    message.role === 'user' ? 'text-green-100' : 'text-gray-500'
+                  } mt-1 text-right`}
+                >
+                  {formatTime(message.timestamp)}
+                </div>
+              </div>
             </div>
-            <div
-              className={`text-xs text-gray-500 mt-1 ${
-                message.role === 'user' ? 'text-right' : 'text-left'
-              }`}
-            >
-              {new Date(message.timestamp).toLocaleTimeString([], {
-                hour: '2-digit',
-                minute: '2-digit',
-              })}
-            </div>
-          </div>
-        ))}
+          ))}
+        </div>
+
+        {/* Loading indicator */}
         {isLoading && (
-          <div className="flex items-center space-x-2 max-w-xs">
-            <div className="bg-gray-100 p-3 rounded-lg text-gray-800 rounded-bl-none flex items-center">
+          <div className="flex justify-start mt-4">
+            <div className="bg-gray-100 px-4 py-3 rounded-lg rounded-bl-none">
               <div className="flex space-x-1">
                 <div
                   className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"
@@ -239,6 +309,8 @@ export default function ChatInterface() {
             </div>
           </div>
         )}
+        
+        {/* Auto-scroll anchor */}
         <div ref={messagesEndRef} />
       </div>
 

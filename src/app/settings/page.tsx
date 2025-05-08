@@ -2,16 +2,18 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import { useAuth } from '@/context/AuthContext';
+import BodyMetricsTab from '@/components/BodyMetricsTab';
+import ProfileTab from '@/components/ProfileTab';
 
 export default function SettingsPage() {
   const router = useRouter();
   const { user, loading, updateSettings } = useAuth();
-
   const [activeTab, setActiveTab] = useState('profile');
+  const searchParams = useSearchParams();
 
   // User physical stats - initialized with empty values
   const [physicalStats, setPhysicalStats] = useState({
@@ -23,10 +25,10 @@ export default function SettingsPage() {
   });
 
   const [profileData, setProfileData] = useState({
-    name: '',
-    email: '',
-    fitnessGoal: '',
-    dietaryPreferences: [] as string[]
+    name: user?.name || '',
+    email: user?.email || '',
+    fitnessGoal: user?.fitnessGoal || '',
+    dietaryPreferences: user?.dietaryPreferences || []
   });
 
   // Health metrics
@@ -38,11 +40,22 @@ export default function SettingsPage() {
   
   // Form validation errors
   const [errors, setErrors] = useState<Record<string, string>>({});
+  console.log("Component rendered with physicalStats:", physicalStats);
+  useEffect(() => {
+    const tabParam = searchParams.get('tab');
+    if (tabParam && ['profile', 'account', 'bodyMetrics', 'password', 'data'].includes(tabParam)) {
+      setActiveTab(tabParam);
+    }
+  }, [searchParams]);
 
   // Load user data when component mounts or when user changes
   useEffect(() => {
     if (user) {
-      console.log("Loading user data:", user);
+      console.log("Raw user data:", JSON.stringify(user, null, 2));
+    
+    // Check the specific structure of your physicalStats object
+    console.log("Physical stats type:", typeof user.physicalStats);
+    console.log("Physical stats JSON:", JSON.stringify(user.physicalStats, null, 2));
       
       // Set profile data
       setProfileData({
@@ -55,6 +68,22 @@ export default function SettingsPage() {
       // Set physical stats if available
       if (user.physicalStats) {
         console.log("Setting physical stats:", user.physicalStats);
+         // Check if physicalStats is a string that needs parsing
+      if (typeof user.physicalStats === 'string') {
+        try {
+          const parsedStats = JSON.parse(user.physicalStats);
+          setPhysicalStats({
+            height: parseFloat(parsedStats.height) || 0,
+            weight: parseFloat(parsedStats.weight) || 0,
+            age: parseInt(parsedStats.age) || 0,
+            gender: parsedStats.gender || 'male',
+            activityLevel: parsedStats.activityLevel || 'moderate'
+          });
+        } catch (e) {
+          console.error("Error parsing physicalStats JSON:", e);
+        }
+      } else {
+        // Original code for when it's already an object
         setPhysicalStats({
           height: user.physicalStats.height || 0,
           weight: user.physicalStats.weight || 0,
@@ -63,7 +92,7 @@ export default function SettingsPage() {
           activityLevel: user.physicalStats.activityLevel || 'moderate'
         });
       }
-      
+    }
       // Set health metrics if available
       if (user.healthMetrics) {
         console.log("Setting health metrics:", user.healthMetrics);
@@ -88,9 +117,14 @@ export default function SettingsPage() {
         if (user.preferences.measurementUnit) {
           setMeasurementUnit(user.preferences.measurementUnit);
         }
+
+
+        console.log("User data from API:", user);
+        console.log("Physical stats from API:", user?.physicalStats);
       }
     }
   }, [user]);
+  console.log("Updated physicalStats state:", physicalStats);
 
   // Calculate BMR, TDEE, and BMI whenever physical stats change
   useEffect(() => {
@@ -148,6 +182,10 @@ export default function SettingsPage() {
 
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [message, setMessage] = useState({ type: '', text: '' });
+  const handleTabChange = (tab) => {
+    setActiveTab(tab);
+    router.push(`/settings?tab=${tab}`, undefined, { shallow: true });
+  };
 
   // Redirect if user is not logged in
   useEffect(() => {
@@ -483,56 +521,56 @@ export default function SettingsPage() {
             {/* Settings tabs */}
             <div className="mt-6 border-b border-gray-200">
               <nav className="-mb-px flex space-x-8">
-                <button
-                  onClick={() => setActiveTab('profile')}
-                  className={`${
-                    activeTab === 'profile'
-                      ? 'border-green-500 text-green-600'
-                      : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-                  } whitespace-nowrap py-4 px-1 border-b-2 font-medium text-black sm`}
-                >
-                  Profile
-                </button>
-                <button
-                  onClick={() => setActiveTab('account')}
-                  className={`${
-                    activeTab === 'account'
-                      ? 'border-green-500 text-green-600'
-                      : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-                  } whitespace-nowrap py-4 px-1 border-b-2 font-medium text-black sm`}
-                >
-                  Account Preferences
-                </button>
-                <button
-                  onClick={() => setActiveTab('bodyMetrics')}
-                  className={`${
-                    activeTab === 'bodyMetrics'
-                      ? 'border-green-500 text-green-600'
-                      : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-                  } whitespace-nowrap py-4 px-1 border-b-2 font-medium text-black sm`}
-                >
-                  Body Metrics
-                </button>
-                <button
-                  onClick={() => setActiveTab('password')}
-                  className={`${
-                    activeTab === 'password'
-                      ? 'border-green-500 text-green-600'
-                      : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-                  } whitespace-nowrap py-4 px-1 border-b-2 font-medium text-black sm`}
-                >
-                  Password
-                </button>
-                <button
-                  onClick={() => setActiveTab('data')}
-                  className={`${
-                    activeTab === 'data'
-                      ? 'border-green-500 text-green-600'
-                      : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-                  } whitespace-nowrap py-4 px-1 border-b-2 font-medium text-black sm`}
-                >
-                  Data & Privacy
-                </button>
+              <button
+                onClick={() => handleTabChange('profile')}
+                className={`${
+                  activeTab === 'profile'
+                    ? 'border-green-500 text-green-600'
+                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                } whitespace-nowrap py-4 px-1 border-b-2 font-medium text-black sm`}
+              >
+                Profile
+              </button>
+              <button
+                onClick={() => handleTabChange('account')}
+                className={`${
+                  activeTab === 'account'
+                    ? 'border-green-500 text-green-600'
+                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                } whitespace-nowrap py-4 px-1 border-b-2 font-medium text-black sm`}
+              >
+                Account Preferences
+              </button>
+              <button
+                onClick={() => handleTabChange('bodyMetrics')}
+                className={`${
+                  activeTab === 'bodyMetrics'
+                    ? 'border-green-500 text-green-600'
+                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                } whitespace-nowrap py-4 px-1 border-b-2 font-medium text-black sm`}
+              >
+                Body Metrics
+              </button>
+              <button
+                onClick={() => handleTabChange('password')}
+                className={`${
+                  activeTab === 'password'
+                    ? 'border-green-500 text-green-600'
+                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                } whitespace-nowrap py-4 px-1 border-b-2 font-medium text-black sm`}
+              >
+                Password
+              </button>
+              <button
+                onClick={() => handleTabChange('data')}
+                className={`${
+                  activeTab === 'data'
+                    ? 'border-green-500 text-green-600'
+                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                } whitespace-nowrap py-4 px-1 border-b-2 font-medium text-black sm`}
+              >
+                Data & Privacy
+              </button>
               </nav>
             </div>
 
@@ -547,152 +585,15 @@ export default function SettingsPage() {
 
             {/* Body Metrics Tab */}
             {activeTab === 'bodyMetrics' && (
-              <div className="mt-6 bg-white shadow rounded-lg">
-                <div className="px-4 py-5 sm:p-6">
-                  <h3 className="text-lg font-medium leading-6 text-gray-900">Body Metrics</h3>
-                  <p className="mt-1 text-sm text-gray-500">
-                    Keep your body measurements up to date for accurate fitness recommendations.
-                  </p>
-                  
-                  <div className="mt-6 grid grid-cols-1 gap-y-6 gap-x-4 sm:grid-cols-6">
-                    <div className="sm:col-span-3">
-                      <label htmlFor="height" className="block text-sm font-medium text-black">
-                        Height
-                      </label>
-                      <div className="mt-1 relative rounded-md shadow-sm">
-                        <input
-                          type="number"
-                          name="height"
-                          id="height"
-                          value={physicalStats.height || ''}
-                          onChange={handlePhysicalStatsChange}
-                          className="focus:ring-green-800 focus:border-green-800 w-full pr-12 sm:text-black bg-gray-100 rounded-md"
-                          placeholder="0"
-                        />
-                        <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
-                          <span className="text-black-500 sm:text-black sm">
-                            {measurementUnit === 'metric' ? 'cm' : 'in'}
-                          </span>
-                        </div>
-                      </div>
-                    </div>
-
-                    <div className="sm:col-span-3">
-                      <label htmlFor="weight" className="block text-sm font-medium text-black">
-                        Weight
-                      </label>
-                      <div className="mt-1 relative rounded-md shadow-sm">
-                        <input
-                          type="number"
-                          name="weight"
-                          id="weight"
-                          value={physicalStats.weight || ''}
-                          onChange={handlePhysicalStatsChange}
-                          className="focus:ring-green-500 focus:border-green-500 w-full pr-12 sm:text-black bg-gray-100 rounded-md"
-                          placeholder="0"
-                        />
-                        <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
-                          <span className="text-black-500 sm:text-black sm">
-                            {measurementUnit === 'metric' ? 'kg' : 'lb'}
-                          </span>
-                        </div>
-                      </div>
-                    </div>
-
-                    <div className="sm:col-span-2">
-                      <label htmlFor="age" className="block text-sm font-medium text-black">
-                        Age
-                      </label>
-                      <div className="mt-1">
-                        <input
-                          type="number"
-                          name="age"
-                          id="age"
-                          value={physicalStats.age || ''}
-                          onChange={handlePhysicalStatsChange}
-                          className="shadow-sm focus:ring-green-500 focus:border-green-500 w-full sm:text-black bg-gray-100 rounded-md"
-                        />
-                      </div>
-                    </div>
-
-                    <div className="sm:col-span-2">
-                      <label htmlFor="gender" className="block text-sm font-medium text-black">
-                        Gender
-                      </label>
-                      <div className="mt-1">
-                        <select
-                          id="gender"
-                          name="gender"
-                          value={physicalStats.gender}
-                          disabled={true} // Make gender non-editable
-                          className="shadow-sm focus:ring-green-500 focus:border-green-500 block w-full sm:text-black bg-gray-200 rounded-md cursor-not-allowed"
-                        >
-                          <option value="male">Male</option>
-                          <option value="female">Female</option>
-                          <option value="other">Other</option>
-                        </select>
-                        <p className="mt-1 text-xs text-gray-500">Gender cannot be changed</p>
-                      </div>
-                    </div>
-
-                    <div className="sm:col-span-2">
-                      <label htmlFor="activityLevel" className="block text-sm font-medium text-black">
-                        Activity Level
-                      </label>
-                      <div className="mt-1">
-                        <select
-                          id="activityLevel"
-                          name="activityLevel"
-                          value={physicalStats.activityLevel}
-                          onChange={handlePhysicalStatsChange}
-                          className="shadow-sm focus:ring-green-500 focus:border-green-500 block w-full sm:text-black bg-gray-100 rounded-md"
-                        >
-                          <option value="sedentary">Sedentary (little or no exercise)</option>
-                          <option value="light">Light (1-3 days/week)</option>
-                          <option value="moderate">Moderate (3-5 days/week)</option>
-                          <option value="active">Active (6-7 days/week)</option>
-                          <option value="veryActive">Very Active (physical job or 2x training)</option>
-                        </select>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="mt-8 bg-gray-50 p-4 rounded-md">
-                    <h4 className="text-base font-medium text-gray-900">Your Estimated Metrics</h4>
-                    <div className="mt-2 grid grid-cols-1 gap-y-6 gap-x-4 sm:grid-cols-3">
-                      <div>
-                        <p className="text-sm font-medium text-gray-500">Basal Metabolic Rate (BMR)</p>
-                        <p className="mt-1 text-2xl font-semibold text-gray-900">{healthMetrics.bmr} calories/day</p>
-                        <p className="mt-1 text-xs text-gray-500">Calories your body needs at complete rest</p>
-                      </div>
-                      <div>
-                        <p className="text-sm font-medium text-gray-500">Total Daily Energy Expenditure (TDEE)</p>
-                        <p className="mt-1 text-2xl font-semibold text-gray-900">{healthMetrics.tdee} calories/day</p>
-                        <p className="mt-1 text-xs text-gray-500">Total calories burned daily with activity</p>
-                      </div>
-                      <div>
-                        <p className="text-sm font-medium text-gray-500">Body Mass Index (BMI)</p>
-                        <p className="mt-1 text-2xl font-semibold text-gray-900">{healthMetrics.bmi}</p>
-                        <p className="mt-1 text-xs text-gray-500">Weight relative to height</p>
-                      </div>
-                    </div>
-                  </div>
-                  
-                  <div className="mt-8 flex justify-end">
-                    <button
-                      type="button"
-                      onClick={handleSaveSettings}
-                      disabled={isSubmitting}
-                      className={`inline-flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 ${
-                        isSubmitting ? 'opacity-70 cursor-not-allowed' : ''
-                      }`}
-                    >
-                      {isSubmitting ? 'Saving...' : 'Save Changes'}
-                    </button>
-                  </div>
-                </div>
-              </div>
-            )}
+            <BodyMetricsTab
+              physicalStats={physicalStats}
+              handlePhysicalStatsChange={handlePhysicalStatsChange}
+              measurementUnit={measurementUnit}
+              healthMetrics={healthMetrics}
+              isSubmitting={isSubmitting}
+              handleSaveSettings={handleSaveSettings}
+            />
+          )}
 
             {/* Account Preferences Tab */}
             {activeTab === 'account' && (
@@ -959,122 +860,13 @@ export default function SettingsPage() {
 
             {/* Profile Tab */}
             {activeTab === 'profile' && (
-              <div className="mt-6 bg-white shadow rounded-lg">
-                <div className="px-4 py-5 sm:p-6">
-                  <h3 className="text-lg font-medium leading-6 text-black">Personal Information</h3>
-                  <p className="mt-1 text-sm text-black">
-                    Update your personal information and preferences.
-                  </p>
-                  
-                  <div className="mt-6 grid grid-cols-1 gap-y-6 gap-x-4 sm:grid-cols-6">
-                    <div className="sm:col-span-6">
-                      <label htmlFor="name" className="block text-med font-medium text-black">
-                        Full Name
-                      </label>
-                      <div className="mt-1">
-                        <input
-                          type="text"
-                          name="name"
-                          id="name"
-                          value={profileData.name}
-                          disabled={true} // Make name non-editable
-                          className="shadow-sm block w-full sm:text-black bg-gray-200 rounded-md cursor-not-allowed"
-                        />
-                        <p className="mt-1 text-xs text-gray-500">Name cannot be changed</p>
-                      </div>
-                    </div>
-
-                    <div className="sm:col-span-6">
-                      <label htmlFor="email" className="block text-med font-medium text-black">
-                        Email Address
-                      </label>
-                      <div className="mt-1">
-                        <input
-                          type="email"
-                          name="email"
-                          id="email"
-                          value={profileData.email}
-                          disabled
-                          className="bg-gray-200 text-black w-full sm:text-black rounded-md cursor-not-allowed"
-                        />
-                        <p className="mt-1 text-xs text-gray-500">Email cannot be changed</p>
-                      </div>
-                    </div>
-
-                    <div className="sm:col-span-6">
-                      <label htmlFor="fitnessGoal" className="block text-med font-medium text-black">
-                        Primary Fitness Goal
-                      </label>
-                      <div className="mt-1">
-                        <select
-                          id="fitnessGoal"
-                          name="fitnessGoal"
-                          value={profileData.fitnessGoal}
-                          onChange={(e) => setProfileData({...profileData, fitnessGoal: e.target.value})}
-                          className="shadow-sm focus:ring-green-500 focus:border-green-500 block w-full sm:text-black bg-gray-100 rounded-md"
-                        >
-                          <option value="">Select a goal</option>
-                          <option value="weightLoss">Weight Loss</option>
-                          <option value="muscleGain">Muscle Gain</option>
-                          <option value="endurance">Improve Endurance</option>
-                          <option value="strength">Increase Strength</option>
-                          <option value="flexibility">Enhance Flexibility</option>
-                          <option value="generalFitness">General Fitness</option>
-                        </select>
-                      </div>
-                    </div>
-
-                    <div className="sm:col-span-6">
-                      <label className="block text-med font-med text-black">
-                        Dietary Preferences
-                      </label>
-                      <div className="mt-2 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
-                        {['vegan', 'vegetarian', 'pescatarian', 'keto', 'paleo', 'glutenFree', 'dairyFree'].map(pref => (
-                          <div key={pref} className="flex items-center">
-                            <input
-                              id={pref}
-                              name="dietaryPreferences"
-                              type="checkbox"
-                              checked={profileData.dietaryPreferences.includes(pref)}
-                              onChange={(e) => {
-                                if (e.target.checked) {
-                                  setProfileData({
-                                    ...profileData, 
-                                    dietaryPreferences: [...profileData.dietaryPreferences, pref]
-                                  });
-                                } else {
-                                  setProfileData({
-                                    ...profileData, 
-                                    dietaryPreferences: profileData.dietaryPreferences.filter(p => p !== pref)
-                                  });
-                                }
-                              }}
-                              className="h-4 w-4 text-green-600 focus:ring-green-500 border-gray-300 rounded"
-                            />
-                            <label htmlFor={pref} className="ml-2 text-sm text-gray-700">
-                              {pref.charAt(0).toUpperCase() + pref.slice(1).replace(/([A-Z])/g, ' $1')}
-                            </label>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  </div>
-                  
-                  <div className="mt-8 flex justify-end">
-                    <button
-                      type="button"
-                      onClick={handleSaveProfile}
-                      disabled={isSubmitting}
-                      className={`inline-flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 ${
-                        isSubmitting ? 'opacity-70 cursor-not-allowed' : ''
-                      }`}
-                    >
-                      {isSubmitting ? 'Saving...' : 'Save Changes'}
-                    </button>
-                  </div>
-                </div>
-              </div>
-            )}
+            <ProfileTab
+              profileData={profileData}
+              setProfileData={setProfileData}
+              isSubmitting={isSubmitting}
+              handleSaveProfile={handleSaveProfile}
+            />
+          )}
           </div>
         </div>
       </div>

@@ -25,6 +25,7 @@
     "psql": "^0.0.1",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
+    "react-hook-form": "^7.56.2",
     "stream-browserify": "^3.0.0",
     "uuid": "^11.1.0"
   },
