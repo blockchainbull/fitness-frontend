@@ -387,7 +387,7 @@ export default function FeaturesPage() {
           <div className="mt-8 flex lg:mt-0 lg:flex-shrink-0">
             <div className="inline-flex rounded-md shadow">
               <Link
-                href="/signup"
+                href="/onboarding/basic-info"
                 className="inline-flex items-center justify-center px-5 py-3 border border-transparent text-base font-medium rounded-md text-green-700 bg-white hover:bg-gray-50"
               >
                 Get started

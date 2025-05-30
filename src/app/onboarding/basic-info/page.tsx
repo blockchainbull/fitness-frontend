@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { User, Mail, Lock, Calendar, Ruler, Weight, Eye, EyeOff } from 'lucide-react';
+import { User, Mail, Lock, Calendar, Ruler, Weight, Eye, EyeOff, BarChart3 } from 'lucide-react';
 import { useOnboarding } from '@/context/OnboardingContext';
 
 interface FormData {
@@ -162,6 +162,24 @@ const BasicInfoPage: React.FC<BasicInfoPageProps> = ({
   useEffect(() => {
     calculateHealthMetrics();
   }, [formData]);
+
+  const getBmiCategory = (): string => {
+    const { bmi } = healthMetrics;
+    if (bmi < 18.5) return 'Underweight';
+    if (bmi >= 18.5 && bmi < 25) return 'Normal';
+    if (bmi >= 25 && bmi < 30) return 'Overweight';
+    if (bmi >= 30) return 'Obese';
+    return 'N/A';
+  };
+
+  const getBmiColor = (): string => {
+    const { bmi } = healthMetrics;
+    if (bmi < 18.5) return 'text-blue-600';
+    if (bmi >= 18.5 && bmi < 25) return 'text-green-600';
+    if (bmi >= 25 && bmi < 30) return 'text-orange-600';
+    if (bmi >= 30) return 'text-red-600';
+    return 'text-gray-500';
+  };
 
   const validateForm = (): boolean => {
     const newErrors: any = {};
@@ -501,6 +519,69 @@ const BasicInfoPage: React.FC<BasicInfoPageProps> = ({
             </select>
             {errors.activityLevel && <span className="text-red-500 text-sm mt-1 block">{errors.activityLevel}</span>}
           </div>
+          
+          {/* Health Metrics */}
+          {(healthMetrics.bmi > 0 || healthMetrics.bmr > 0 || healthMetrics.tdee > 0) && (
+            <div className="mt-8 p-6 bg-blue-50 border border-blue-200 rounded-lg">
+              <div className="flex items-center space-x-2 mb-6">
+                <BarChart3 className="w-6 h-6 text-blue-600" />
+                <h3 className="text-lg font-bold text-blue-900">Health Metrics</h3>
+              </div>
+
+              <div className="space-y-4">
+                {/* BMI */}
+                {healthMetrics.bmi > 0 && (
+                  <>
+                    <div className="flex justify-between items-center">
+                      <div>
+                        <h4 className="font-semibold text-gray-900">BMI (Body Mass Index)</h4>
+                        <p className="text-sm text-gray-600">A measure of body fat based on height and weight</p>
+                      </div>
+                      <div className="text-right">
+                        <div className={`text-xl font-bold ${getBmiColor()}`}>
+                          {healthMetrics.bmi.toFixed(1)}
+                        </div>
+                        <div className={`text-sm ${getBmiColor()}`}>
+                          {getBmiCategory()}
+                        </div>
+                      </div>
+                    </div>
+                    <hr className="border-gray-300" />
+                  </>
+                )}
+
+                {/* BMR */}
+                {healthMetrics.bmr > 0 && (
+                  <>
+                    <div className="flex justify-between items-center">
+                      <div>
+                        <h4 className="font-semibold text-gray-900">BMR (Basal Metabolic Rate)</h4>
+                        <p className="text-sm text-gray-600">Calories needed for basic functions at rest</p>
+                      </div>
+                      <div className="text-lg font-bold text-gray-900">
+                        {healthMetrics.bmr} calories/day
+                      </div>
+                    </div>
+                    <hr className="border-gray-300" />
+                  </>
+                )}
+
+                {/* TDEE */}
+                {healthMetrics.tdee > 0 && (
+                  <div className="flex justify-between items-center">
+                    <div>
+                      <h4 className="font-semibold text-gray-900">TDEE (Total Daily Energy Expenditure)</h4>
+                      <p className="text-sm text-gray-600">Total calories burned daily based on activity level</p>
+                    </div>
+                    <div className="text-lg font-bold text-green-600">
+                      {healthMetrics.tdee} calories/day
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+
 
           {/* Next Button */}
           <div className="mt-8 flex justify-end">

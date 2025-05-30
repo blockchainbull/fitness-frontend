@@ -149,7 +149,7 @@ export default function PricingPage() {
               </div>
 
               <Link
-                href={`/signup?plan=basic&billing=${billingInterval}`}
+                href={`/onboarding/basic-info?plan=basic&billing=${billingInterval}`}
                 className="mt-8 block w-full bg-green-50 border border-green-200 rounded-md py-3 text-sm font-semibold text-green-700 text-center hover:bg-green-100"
               >
                 Get started
@@ -249,7 +249,7 @@ export default function PricingPage() {
               </div>
 
               <Link
-                href={`/signup?plan=pro&billing=${billingInterval}`}
+                href={`/onboarding/basic-info?plan=pro&billing=${billingInterval}`}
                 className="mt-8 block w-full bg-green-600 border border-transparent rounded-md py-3 text-sm font-semibold text-white text-center hover:bg-green-700"
               >
                 Get started
@@ -342,7 +342,7 @@ export default function PricingPage() {
               </div>
 
               <Link
-                href={`/signup?plan=premium&billing=${billingInterval}`}
+                href={`/onboarding/basic-info?plan=premium&billing=${billingInterval}`}
                 className="mt-8 block w-full bg-green-50 border border-green-200 rounded-md py-3 text-sm font-semibold text-green-700 text-center hover:bg-green-100"
               >
                 Get started
@@ -419,7 +419,7 @@ export default function PricingPage() {
           <div className="mt-8 flex lg:mt-0 lg:flex-shrink-0">
             <div className="inline-flex rounded-md shadow">
               <Link
-                href="/signup"
+                href="/onboarding/basic-info"
                 className="inline-flex items-center justify-center px-5 py-3 border border-transparent text-base font-medium rounded-md text-white bg-green-600 hover:bg-green-700"
               >
                 Get started
