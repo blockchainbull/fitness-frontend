@@ -90,33 +90,34 @@ export const OnboardingProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const completeOnboarding = async () => {
-  try {
-    const response = await fetch('http://localhost:8000/api/onboarding/complete', {
-      method: 'POST',
-      headers: { 
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(onboardingData),
-    });
+    try {
+      // Call your backend API directly instead of Next.js API routes
+      const response = await fetch('http://localhost:8000/api/onboarding/complete', {  // Updated URL
+        method: 'POST',
+        headers: { 
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(onboardingData),
+      });
 
-    if (!response.ok) {
-      const errorData = await response.json();
-      throw new Error(errorData.detail || 'Failed to complete onboarding');
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.detail || 'Failed to complete onboarding');
+      }
+      
+      const result = await response.json();
+      console.log('Onboarding completed successfully:', result);
+      
+      // Clear onboarding data after successful completion
+      clearOnboardingData();
+      
+      return result;
+      
+    } catch (error) {
+      console.error('Onboarding error:', error);
+      throw error;
     }
-    
-    const result = await response.json();
-    console.log('Onboarding completed successfully:', result);
-    
-    // Clear onboarding data after successful completion
-    clearOnboardingData();
-    
-    return result;
-    
-  } catch (error) {
-    console.error('Onboarding error:', error);
-    throw error;
-  }
-};
+  };
 
   const clearOnboardingData = () => {
     setOnboardingData({});

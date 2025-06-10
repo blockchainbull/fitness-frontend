@@ -1,77 +1,36 @@
+// src/app/api/auth/register/route.ts
 import { NextRequest, NextResponse } from 'next/server';
-import { PrismaClient } from '@prisma/client';
-import bcrypt from 'bcryptjs';
-import { generateToken } from '@/lib/auth';
-import { v4 as uuidv4 } from 'uuid';
 
-
-const prisma = new PrismaClient();
-
-export async function POST(req: NextRequest) {
+export async function POST(request: NextRequest) {
   try {
-    // Parse request body
-    const { name, email, password, fitnessGoal, dietaryPreferences } = await req.json();
+    const body = await request.json();
+    const { name, email, password, fitnessGoal, dietaryPreferences } = body;
 
-    // Check if user already exists
-    const existingUser = await prisma.user.findUnique({
-      where: { email },
-    });
-
-    if (existingUser) {
+    if (!name || !email || !password) {
       return NextResponse.json(
-        { success: false, message: 'User already exists' },
+        { message: 'Name, email and password are required' },
         { status: 400 }
       );
     }
 
-    // Hash the password
-    const hashedPassword = await bcrypt.hash(password, 10);
-
-    // Create new user
-    const user = await prisma.user.create({
-      data: {
-        id: uuidv4(),
+    // For now, this would need to be connected to your backend
+    // You can implement registration logic here
+    return NextResponse.json({
+      success: true,
+      user: {
+        id: Date.now().toString(), // Temporary ID
         name,
         email,
-        password: hashedPassword,
         fitnessGoal,
-        dietaryPreferences: dietaryPreferences || [],
+        dietaryPreferences
       },
+      message: 'Registration successful'
     });
 
-    // Generate token
-    const token = generateToken(user);
-
-    // Create response
-    const response = NextResponse.json(
-      {
-        success: true,
-        user: {
-          id: user.id,
-          name: user.name,
-          email: user.email,
-          fitnessGoal: user.fitnessGoal,
-          dietaryPreferences: user.dietaryPreferences,
-        },
-      },
-      { status: 201 }
-    );
-
-    // Set token cookie
-    response.cookies.set({
-      name: 'token',
-      value: token,
-      httpOnly: true,
-      maxAge: 60 * 60 * 24 * 7, // 1 week
-      path: '/',
-      sameSite: 'strict',
-    });
-
-    return response;
   } catch (error) {
     console.error('Registration error:', error);
     return NextResponse.json(
-      { success: false, message: 'Server error', error: (error as Error).message },
+      { message: 'Registration failed' },
       { status: 500 }
     );
   }

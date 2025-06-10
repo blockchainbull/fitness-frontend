@@ -1,75 +1,74 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { PrismaClient } from '@prisma/client';
-import bcrypt from 'bcryptjs';
-import { generateToken } from '@/lib/auth';
+import { cookies } from 'next/headers';
 
-const prisma = new PrismaClient();
-
-export async function POST(req: NextRequest) {
+export async function POST(request: NextRequest) {
   try {
-    // Parse request body
-    const { email, password } = await req.json();
+    const { email, password } = await request.json();
 
-    // Check if email and password are provided
     if (!email || !password) {
       return NextResponse.json(
-        { success: false, message: 'Please provide email and password' },
+        { error: 'Email and password are required' },
         { status: 400 }
       );
     }
 
-    // Find user by email
-    const user = await prisma.user.findUnique({
-      where: { email },
+    // Call your backend API directly
+    const backendResponse = await fetch('http://localhost:8000/api/auth/login', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ email, password }),
     });
 
-    if (!user) {
+    if (!backendResponse.ok) {
+      const errorData = await backendResponse.json();
       return NextResponse.json(
-        { success: false, message: 'Invalid credentials' },
-        { status: 401 }
+        { error: errorData.detail || 'Login failed' },
+        { status: backendResponse.status }
       );
     }
 
-    // Compare passwords using bcrypt
-    const isMatch = await bcrypt.compare(password, user.password);
-
-    if (!isMatch) {
-      return NextResponse.json(
-        { success: false, message: 'Invalid credentials' },
-        { status: 401 }
-      );
-    }
-
-    // Generate token
-    const token = generateToken(user);
-
-    // Create response
+    const result = await backendResponse.json();
+    
+    // Create response with user data
     const response = NextResponse.json({
       success: true,
-      user: {
-        id: user.id,
-        name: user.name,
-        email: user.email,
-        fitnessGoal: user.fitnessGoal,
-        dietaryPreferences: user.dietaryPreferences,
-      },
+      user: result.user,
+      message: result.message
     });
 
-    // Set token cookie
-    response.cookies.set({
-      name: 'token',
-      value: token,
+    // Set secure cookies for auto-login
+    response.cookies.set('userId', result.user.id, {
       httpOnly: true,
-      maxAge: 60 * 60 * 24 * 7, // 1 week
-      path: '/',
-      sameSite: 'strict',
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
+      maxAge: 30 * 24 * 60 * 60, // 30 days
+      path: '/'
+    });
+
+    response.cookies.set('userEmail', result.user.email, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
+      maxAge: 30 * 24 * 60 * 60, // 30 days
+      path: '/'
+    });
+
+    response.cookies.set('isLoggedIn', 'true', {
+      httpOnly: false, // Make this accessible to client-side
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
+      maxAge: 30 * 24 * 60 * 60, // 30 days
+      path: '/'
     });
 
     return response;
+
   } catch (error) {
-    console.error('Login error:', error);
+    console.error('Login API error:', error);
     return NextResponse.json(
-      { success: false, message: 'Server error', error: (error as Error).message },
+      { error: 'Internal server error' },
       { status: 500 }
     );
   }

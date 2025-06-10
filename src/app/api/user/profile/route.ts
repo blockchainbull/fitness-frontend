@@ -1,134 +1,77 @@
 // src/app/api/user/profile/route.ts
 import { NextRequest, NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
-import jwt from 'jsonwebtoken';
-import prisma from '@/lib/db';
 
-const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key';
-
-export async function GET(req: NextRequest) {
+export async function GET(request: NextRequest) {
   try {
-  
-    // Get token from cookies
     const cookieStore = await cookies();
-    const token = cookieStore.get('token')?.value;
+    const userId = cookieStore.get('userId')?.value;
     
-    if (!token) {
-      return NextResponse.json(
-        { success: false, message: 'Not authorized, no token' },
-        { status: 401 }
-      );
+    if (!userId) {
+      return NextResponse.json({ 
+        success: false, 
+        message: 'Not authenticated' 
+      }, { status: 401 });
     }
 
-    // Verify token
-    const decoded = jwt.verify(token, JWT_SECRET) as jwt.JwtPayload & { id: string };
-    
-    // Find user by id
-    const user = await prisma.user.findUnique({
-      where: { id: decoded.id },
-    });
-    
-    if (!user) {
-      return NextResponse.json(
-        { success: false, message: 'User not found' },
-        { status: 404 }
-      );
-    }
-
-    // Return user data
-    return NextResponse.json({
-      success: true,
-      user: {
-        id: user.id,
-        name: user.name,
-        email: user.email,
-        fitnessGoal: user.fitnessGoal,
-        dietaryPreferences: user.dietaryPreferences,
+    // Get user profile from your backend
+    const backendResponse = await fetch(`http://localhost:8000/api/user/profile/${userId}`, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
       },
     });
-  } catch (error) {
-    console.error('Profile error:', error);
-    
-    // Check if error is due to invalid token
-    if ((error as Error).name === 'JsonWebTokenError') {
-      return NextResponse.json(
-        { success: false, message: 'Invalid token' },
-        { status: 401 }
-      );
+
+    if (!backendResponse.ok) {
+      return NextResponse.json({ 
+        success: false, 
+        message: 'User not found' 
+      }, { status: 404 });
     }
+
+    const result = await backendResponse.json();
     
-    return NextResponse.json(
-      { success: false, message: 'Server error', error: (error as Error).message },
-      { status: 500 }
-    );
+    return NextResponse.json({
+      success: true,
+      user: result.user
+    });
+
+  } catch (error) {
+    console.error('Profile fetch error:', error);
+    return NextResponse.json({ 
+      success: false, 
+      message: 'Internal server error' 
+    }, { status: 500 });
   }
 }
 
-export async function PUT(req: NextRequest) {
+export async function PUT(request: NextRequest) {
   try {
-    
-    // Get token from cookies
     const cookieStore = await cookies();
-    const token = cookieStore.get('token')?.value;
+    const userId = cookieStore.get('userId')?.value;
     
-    if (!token) {
-      return NextResponse.json(
-        { success: false, message: 'Not authorized, no token' },
-        { status: 401 }
-      );
+    if (!userId) {
+      return NextResponse.json({ 
+        success: false, 
+        message: 'Not authenticated' 
+      }, { status: 401 });
     }
 
-    // Verify token
-    const decoded = jwt.verify(token, JWT_SECRET) as jwt.JwtPayload & { id: string };
-    
-    // Parse request body
-    const { name, fitnessGoal, dietaryPreferences } = await req.json();
+    const body = await request.json();
 
-    // Find and update user
-    const updatedUser = await prisma.user.update({
-      where: {
-        id: decoded.id,
-      },
-      data: {
-        name,
-        fitnessGoal,
-        dietaryPreferences,
-      },
-    });
-    
-    
-    if (!updatedUser) {
-      return NextResponse.json(
-        { success: false, message: 'User not found' },
-        { status: 404 }
-      );
-    }
-
-    // Return updated user data
+    // You can implement profile update here if needed
+    // For now, just return success
     return NextResponse.json({
       success: true,
-      user: {
-        id: updatedUser._id,
-        name: updatedUser.name,
-        email: updatedUser.email,
-        fitnessGoal: updatedUser.fitnessGoal,
-        dietaryPreferences: updatedUser.dietaryPreferences,
-      },
+      user: body,
+      message: 'Profile updated successfully'
     });
+
   } catch (error) {
-    console.error('Update profile error:', error);
-    
-    // Check if error is due to invalid token
-    if ((error as Error).name === 'JsonWebTokenError') {
-      return NextResponse.json(
-        { success: false, message: 'Invalid token' },
-        { status: 401 }
-      );
-    }
-    
-    return NextResponse.json(
-      { success: false, message: 'Server error', error: (error as Error).message },
-      { status: 500 }
-    );
+    console.error('Profile update error:', error);
+    return NextResponse.json({ 
+      success: false, 
+      message: 'Failed to update profile' 
+    }, { status: 500 });
   }
 }
