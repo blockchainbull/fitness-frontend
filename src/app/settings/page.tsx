@@ -11,14 +11,14 @@ import ProfileTab from '@/components/ProfileTab';
 
 export default function SettingsPage() {
   const router = useRouter();
-  const { user, loading, updateSettings } = useAuth();
+  const { user, loading, updateUser } = useAuth(); 
   const [activeTab, setActiveTab] = useState('profile');
   const searchParams = useSearchParams();
 
-  // User physical stats - initialized with empty values
+  // User physical stats - initialized with user data
   const [physicalStats, setPhysicalStats] = useState({
-    height: 0, // in cm
-    weight: 0, // in kg
+    height: 0,
+    weight: 0,
     age: 0,
     gender: 'male',
     activityLevel: 'moderate'
@@ -40,7 +40,7 @@ export default function SettingsPage() {
   
   // Form validation errors
   const [errors, setErrors] = useState<Record<string, string>>({});
-  console.log("Component rendered with physicalStats:", physicalStats);
+
   useEffect(() => {
     const tabParam = searchParams.get('tab');
     if (tabParam && ['profile', 'account', 'bodyMetrics', 'password', 'data'].includes(tabParam)) {
@@ -51,11 +51,7 @@ export default function SettingsPage() {
   // Load user data when component mounts or when user changes
   useEffect(() => {
     if (user) {
-      console.log("Raw user data:", JSON.stringify(user, null, 2));
-    
-    // Check the specific structure of your physicalStats object
-    console.log("Physical stats type:", typeof user.physicalStats);
-    console.log("Physical stats JSON:", JSON.stringify(user.physicalStats, null, 2));
+      console.log("Loading user data:", user);
       
       // Set profile data
       setProfileData({
@@ -65,66 +61,23 @@ export default function SettingsPage() {
         dietaryPreferences: user.dietaryPreferences || []
       });
 
-      // Set physical stats if available
-      if (user.physicalStats) {
-        console.log("Setting physical stats:", user.physicalStats);
-         // Check if physicalStats is a string that needs parsing
-      if (typeof user.physicalStats === 'string') {
-        try {
-          const parsedStats = JSON.parse(user.physicalStats);
-          setPhysicalStats({
-            height: parseFloat(parsedStats.height) || 0,
-            weight: parseFloat(parsedStats.weight) || 0,
-            age: parseInt(parsedStats.age) || 0,
-            gender: parsedStats.gender || 'male',
-            activityLevel: parsedStats.activityLevel || 'moderate'
-          });
-        } catch (e) {
-          console.error("Error parsing physicalStats JSON:", e);
-        }
-      } else {
-        // Original code for when it's already an object
-        setPhysicalStats({
-          height: user.physicalStats.height || 0,
-          weight: user.physicalStats.weight || 0,
-          age: user.physicalStats.age || 0,
-          gender: user.physicalStats.gender || 'male',
-          activityLevel: user.physicalStats.activityLevel || 'moderate'
-        });
-      }
-    }
-      // Set health metrics if available
-      if (user.healthMetrics) {
-        console.log("Setting health metrics:", user.healthMetrics);
-        setHealthMetrics({
-          bmr: user.healthMetrics.bmr || 0,
-          tdee: user.healthMetrics.tdee || 0,
-          bmi: user.healthMetrics.bmi || 0
-        });
-      }
-      
-      // Load preferences
-      if (user.preferences) {
-        if (user.preferences.notifications) {
-          setNotifications(user.preferences.notifications);
-        }
-        if (user.preferences.privacy) {
-          setPrivacy(user.preferences.privacy);
-        }
-        if (user.preferences.theme) {
-          setTheme(user.preferences.theme);
-        }
-        if (user.preferences.measurementUnit) {
-          setMeasurementUnit(user.preferences.measurementUnit);
-        }
+      // Set physical stats - simplified to handle flat user object
+      setPhysicalStats({
+        height: user.height || 0,
+        weight: user.weight || 0,
+        age: user.age || 0,
+        gender: user.gender || 'male',
+        activityLevel: user.activityLevel || 'moderate'
+      });
 
-
-        console.log("User data from API:", user);
-        console.log("Physical stats from API:", user?.physicalStats);
-      }
+      // Set health metrics
+      setHealthMetrics({
+        bmr: user.bmr || 0,
+        tdee: user.tdee || 0,
+        bmi: user.bmi || 0
+      });
     }
   }, [user]);
-  console.log("Updated physicalStats state:", physicalStats);
 
   // Calculate BMR, TDEE, and BMI whenever physical stats change
   useEffect(() => {
@@ -141,11 +94,11 @@ export default function SettingsPage() {
 
       // Activity multipliers for TDEE calculation
       const activityMultipliers = {
-        sedentary: 1.2,     // Little to no exercise
-        light: 1.375,       // Light exercise 1-3 days per week
-        moderate: 1.55,     // Moderate exercise 3-5 days per week
-        active: 1.725,      // Hard exercise 6-7 days per week
-        veryActive: 1.9     // Very hard exercise and physical job
+        sedentary: 1.2,
+        light: 1.375,
+        moderate: 1.55,
+        active: 1.725,
+        veryActive: 1.9
       };
 
       const multiplier = activityMultipliers[physicalStats.activityLevel as keyof typeof activityMultipliers] || 1.55;
@@ -165,24 +118,25 @@ export default function SettingsPage() {
     }
   }, [physicalStats]);
 
-  // Settings that could be stored in user preferences
+  // Settings preferences
   const [notifications, setNotifications] = useState({
-    email: true,
-    app: true,
-    marketing: false
+    email: user?.emailNotifications || true,
+    app: user?.appNotifications || true,
+    marketing: user?.marketingNotifications || false
   });
 
   const [privacy, setPrivacy] = useState({
-    shareProgress: true,
-    publicProfile: false
+    shareProgress: user?.shareProgress || true,
+    publicProfile: user?.publicProfile || false
   });
 
-  const [theme, setTheme] = useState('system');
-  const [measurementUnit, setMeasurementUnit] = useState('metric');
+  const [theme, setTheme] = useState(user?.theme || 'system');
+  const [measurementUnit, setMeasurementUnit] = useState(user?.measurementUnit || 'metric');
 
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [message, setMessage] = useState({ type: '', text: '' });
-  const handleTabChange = (tab) => {
+
+  const handleTabChange = (tab: string) => {
     setActiveTab(tab);
     router.push(`/settings?tab=${tab}`, undefined, { shallow: true });
   };
@@ -278,48 +232,16 @@ export default function SettingsPage() {
     return Object.keys(newErrors).length === 0;
   };
 
-  const validateFormData = () => {
-    const errors: Record<string, string> = {};
-    
-    if (!physicalStats.height || physicalStats.height <= 0) {
-      errors.height = "Please enter a valid height";
-    }
-    
-    if (!physicalStats.weight || physicalStats.weight <= 0) {
-      errors.weight = "Please enter a valid weight";
-    }
-    
-    if (!physicalStats.age || physicalStats.age <= 0 || physicalStats.age > 120) {
-      errors.age = "Please enter a valid age (1-120)";
-    }
-    
-    setErrors(errors);
-    return Object.keys(errors).length === 0;
-  };
-
-
   const handleSaveProfile = async () => {
     setIsSubmitting(true);
     setMessage({ type: '', text: '' });
     
     try {
-      // Call your API to save profile data
-      const response = await fetch('/api/user/profile', {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          fitnessGoal: profileData.fitnessGoal,
-          dietaryPreferences: profileData.dietaryPreferences
-        })
+      // Use updateUser instead of separate API call
+      await updateUser({
+        fitnessGoal: profileData.fitnessGoal,
+        dietaryPreferences: profileData.dietaryPreferences
       });
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || 'Failed to update profile');
-      }
-      
-      // Update the user context with the new data
-      const data = await response.json();
       
       setMessage({
         type: 'success',
@@ -340,44 +262,40 @@ export default function SettingsPage() {
     if (activeTab === 'bodyMetrics' && !validateBodyMetricsForm()) {
       return;
     }
-  
-    if (!validateFormData()) {
-      return;
-    }
     
     setIsSubmitting(true);
     setMessage({ type: '', text: '' });
     
     try {
-      console.log("Saving settings with data:", {
-        physicalStats,
-        healthMetrics,
-        measurementUnit
-      });
+      console.log("Saving settings with data");
       
-      // Include physical stats and health metrics in the data being sent to the backend
-      const dataToSave = {
-        notifications,
-        privacy,
-        theme,
-        measurementUnit,
-        physicalStats: {
-          height: physicalStats.height,
-          weight: physicalStats.weight,
-          age: physicalStats.age,
-          gender: physicalStats.gender,
-          activityLevel: physicalStats.activityLevel
-        },
-        healthMetrics: {
-          bmr: healthMetrics.bmr,
-          tdee: healthMetrics.tdee,
-          bmi: healthMetrics.bmi
-        }
+      // Flatten all data into a single object for updateUser
+      const updateData = {
+        // Physical stats
+        height: physicalStats.height,
+        weight: physicalStats.weight,
+        age: physicalStats.age,
+        gender: physicalStats.gender,
+        activityLevel: physicalStats.activityLevel,
+        
+        // Health metrics (will be recalculated by backend)
+        bmr: healthMetrics.bmr,
+        tdee: healthMetrics.tdee,
+        bmi: healthMetrics.bmi,
+        
+        // Preferences
+        emailNotifications: notifications.email,
+        appNotifications: notifications.app,
+        marketingNotifications: notifications.marketing,
+        shareProgress: privacy.shareProgress,
+        publicProfile: privacy.publicProfile,
+        theme: theme,
+        measurementUnit: measurementUnit
       };
-  
-      // Use the context's updateSettings function instead of manually making the API call
-      await updateSettings(dataToSave);
-  
+
+      // Use updateUser instead of updateSettings
+      await updateUser(updateData);
+
       setMessage({
         type: 'success',
         text: 'Settings saved successfully!'
@@ -458,8 +376,8 @@ export default function SettingsPage() {
     setMessage({ type: '', text: '' });
 
     try {
-      // In a real implementation, you would call your password update API
-      const response = await fetch('/api/user/password', {
+      // You'll need to implement password update in your backend
+      const response = await fetch(`http://127.0.0.1:8000/update-password/${user?.id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -521,56 +439,56 @@ export default function SettingsPage() {
             {/* Settings tabs */}
             <div className="mt-6 border-b border-gray-200">
               <nav className="-mb-px flex space-x-8">
-              <button
-                onClick={() => handleTabChange('profile')}
-                className={`${
-                  activeTab === 'profile'
-                    ? 'border-green-500 text-green-600'
-                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-                } whitespace-nowrap py-4 px-1 border-b-2 font-medium text-black sm`}
-              >
-                Profile
-              </button>
-              <button
-                onClick={() => handleTabChange('account')}
-                className={`${
-                  activeTab === 'account'
-                    ? 'border-green-500 text-green-600'
-                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-                } whitespace-nowrap py-4 px-1 border-b-2 font-medium text-black sm`}
-              >
-                Account Preferences
-              </button>
-              <button
-                onClick={() => handleTabChange('bodyMetrics')}
-                className={`${
-                  activeTab === 'bodyMetrics'
-                    ? 'border-green-500 text-green-600'
-                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-                } whitespace-nowrap py-4 px-1 border-b-2 font-medium text-black sm`}
-              >
-                Body Metrics
-              </button>
-              <button
-                onClick={() => handleTabChange('password')}
-                className={`${
-                  activeTab === 'password'
-                    ? 'border-green-500 text-green-600'
-                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-                } whitespace-nowrap py-4 px-1 border-b-2 font-medium text-black sm`}
-              >
-                Password
-              </button>
-              <button
-                onClick={() => handleTabChange('data')}
-                className={`${
-                  activeTab === 'data'
-                    ? 'border-green-500 text-green-600'
-                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-                } whitespace-nowrap py-4 px-1 border-b-2 font-medium text-black sm`}
-              >
-                Data & Privacy
-              </button>
+                <button
+                  onClick={() => handleTabChange('profile')}
+                  className={`${
+                    activeTab === 'profile'
+                      ? 'border-green-500 text-green-600'
+                      : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                  } whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm`}
+                >
+                  Profile
+                </button>
+                <button
+                  onClick={() => handleTabChange('account')}
+                  className={`${
+                    activeTab === 'account'
+                      ? 'border-green-500 text-green-600'
+                      : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                  } whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm`}
+                >
+                  Account Preferences
+                </button>
+                <button
+                  onClick={() => handleTabChange('bodyMetrics')}
+                  className={`${
+                    activeTab === 'bodyMetrics'
+                      ? 'border-green-500 text-green-600'
+                      : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                  } whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm`}
+                >
+                  Body Metrics
+                </button>
+                <button
+                  onClick={() => handleTabChange('password')}
+                  className={`${
+                    activeTab === 'password'
+                      ? 'border-green-500 text-green-600'
+                      : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                  } whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm`}
+                >
+                  Password
+                </button>
+                <button
+                  onClick={() => handleTabChange('data')}
+                  className={`${
+                    activeTab === 'data'
+                      ? 'border-green-500 text-green-600'
+                      : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                  } whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm`}
+                >
+                  Data & Privacy
+                </button>
               </nav>
             </div>
 
@@ -585,15 +503,15 @@ export default function SettingsPage() {
 
             {/* Body Metrics Tab */}
             {activeTab === 'bodyMetrics' && (
-            <BodyMetricsTab
-              physicalStats={physicalStats}
-              handlePhysicalStatsChange={handlePhysicalStatsChange}
-              measurementUnit={measurementUnit}
-              healthMetrics={healthMetrics}
-              isSubmitting={isSubmitting}
-              handleSaveSettings={handleSaveSettings}
-            />
-          )}
+              <BodyMetricsTab
+                physicalStats={physicalStats}
+                handlePhysicalStatsChange={handlePhysicalStatsChange}
+                measurementUnit={measurementUnit}
+                healthMetrics={healthMetrics}
+                isSubmitting={isSubmitting}
+                handleSaveSettings={handleSaveSettings}
+              />
+            )}
 
             {/* Account Preferences Tab */}
             {activeTab === 'account' && (
@@ -603,13 +521,13 @@ export default function SettingsPage() {
                   
                   <div className="mt-6 space-y-6">
                     <div>
-                      <h4 className="text-med font-medium text-black">Measurement Units</h4>
+                      <h4 className="text-sm font-medium text-gray-700">Measurement Units</h4>
                       <select
                         id="units"
                         name="units"
                         value={measurementUnit}
                         onChange={handleUnitChange}
-                        className="mt-1 block w-full pl-3 pr-10 py-2 text-base bg-gray-100 focus:outline-none focus:ring-green-500 focus:border-green-500 sm:text-black rounded-md"
+                        className="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-green-500 focus:border-green-500 sm:text-sm rounded-md"
                       >
                         <option value="metric">Metric (kg, cm)</option>
                         <option value="imperial">Imperial (lb, in)</option>
@@ -860,17 +778,17 @@ export default function SettingsPage() {
 
             {/* Profile Tab */}
             {activeTab === 'profile' && (
-            <ProfileTab
-              profileData={profileData}
-              setProfileData={setProfileData}
-              isSubmitting={isSubmitting}
-              handleSaveProfile={handleSaveProfile}
-            />
-          )}
-          </div>
-        </div>
-      </div>
-      <Footer />
-    </div>
-  );
+              <ProfileTab
+                profileData={profileData}
+                setProfileData={setProfileData}
+                isSubmitting={isSubmitting}
+                handleSaveProfile={handleSaveProfile}
+             />
+           )}
+         </div>
+       </div>
+     </div>
+     <Footer />
+   </div>
+ );
 }

@@ -17,6 +17,7 @@ export default function ChatInterface() {
   const [inputMessage, setInputMessage] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
   const userId = user ? user.id : 'guest';
 
   // Load chat history and set default prompt if no conversation exists
@@ -60,6 +61,19 @@ export default function ChatInterface() {
   
     fetchPreviousConversation();
   }, [userId, user]);
+
+  // Auto-resize textarea
+  const adjustTextareaHeight = () => {
+    const textarea = textareaRef.current;
+    if (textarea) {
+      textarea.style.height = 'auto';
+      textarea.style.height = Math.min(textarea.scrollHeight, 120) + 'px'; // Max height of ~4 lines
+    }
+  };
+
+  useEffect(() => {
+    adjustTextareaHeight();
+  }, [inputMessage]);
 
   const handleSendMessage = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -120,6 +134,14 @@ export default function ChatInterface() {
     }
   };
 
+  // Handle Enter key press
+  const handleKeyPress = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      handleSendMessage(e as any);
+    }
+  };
+
   // Process and enhance the HTML content
   const processHtmlContent = (html: string) => {
     // This function adds additional CSS classes to elements within the HTML
@@ -149,7 +171,7 @@ export default function ChatInterface() {
   // Safely render HTML content
   const renderMessageContent = (content: string, role: string) => {
     if (role === 'user') {
-      return <p className="text-white">{content}</p>;
+      return <p className="text-white whitespace-pre-wrap">{content}</p>;
     }
     
     // Process assistant's HTML content to add styling
@@ -222,21 +244,21 @@ export default function ChatInterface() {
 
   if (!isMounted) {
     return (
-      <div className="flex flex-col bg-white rounded-lg shadow-lg h-[600px] max-w-3xl mx-auto">
-        <div className="bg-green-600 text-white px-4 py-3 rounded-t-lg flex items-center">
-          <div className="h-8 w-8 bg-white rounded-full flex items-center justify-center mr-3">
-            <span className="text-green-600 font-bold text-sm">AI</span>
+      <div className="flex-1 flex flex-col bg-white">
+        <div className="bg-green-600 text-white px-6 py-4 flex items-center shadow-md">
+          <div className="h-10 w-10 bg-white rounded-full flex items-center justify-center mr-4">
+            <span className="text-green-600 font-bold">AI</span>
           </div>
           <div>
-            <h2 className="font-semibold">FitMind AI Coach</h2>
-            <p className="text-xs opacity-80">Always here to help with your fitness and nutrition needs</p>
+            <h2 className="font-semibold text-lg">FitMind AI Coach</h2>
+            <p className="text-sm opacity-80">Always here to help with your fitness and nutrition needs</p>
           </div>
         </div>
-        <div className="flex-1 p-4 overflow-y-auto"></div>
-        <div className="border-t border-gray-200 p-4">
-          <div className="flex items-center space-x-2">
-            <div className="flex-1 border border-gray-300 rounded-full px-4 py-2 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent text-black h-10"></div>
-            <div className="rounded-full p-2 bg-gray-300 text-gray-500 h-10 w-10"></div>
+        <div className="flex-1 bg-gray-50"></div>
+        <div className="border-t border-gray-200 p-6 bg-white">
+          <div className="flex items-end space-x-3">
+            <div className="flex-1 min-h-[48px] border border-gray-300 rounded-2xl px-4 py-3 bg-gray-100"></div>
+            <div className="rounded-full p-3 bg-gray-300 text-gray-500 h-12 w-12 flex items-center justify-center"></div>
           </div>
         </div>
       </div>
@@ -244,21 +266,21 @@ export default function ChatInterface() {
   }
 
   return (
-    <div className="flex flex-col bg-white rounded-lg shadow-lg h-[600px] max-w-3xl mx-auto">
-      {/* Chat header */}
-      <div className="bg-green-600 text-white px-4 py-3 rounded-t-lg flex items-center">
-        <div className="h-8 w-8 bg-white rounded-full flex items-center justify-center mr-3">
-          <span className="text-green-600 font-bold text-sm">AI</span>
+    <div className="flex-1 flex flex-col bg-white">
+      {/* Chat header - fixed */}
+      <div className="bg-green-600 text-white px-6 py-4 flex items-center shadow-md flex-shrink-0">
+        <div className="h-10 w-10 bg-white rounded-full flex items-center justify-center mr-4">
+          <span className="text-green-600 font-bold">AI</span>
         </div>
         <div>
-          <h2 className="font-semibold">FitMind AI Coach</h2>
-          <p className="text-xs opacity-80">Always here to help with your fitness and nutrition needs</p>
+          <h2 className="font-semibold text-lg">FitMind AI Coach</h2>
+          <p className="text-sm opacity-80">Always here to help with your fitness and nutrition needs</p>
         </div>
       </div>
 
-      {/* Chat messages */}
-      <div className="flex-1 p-4 overflow-y-auto">
-        <div className="space-y-3">
+      {/* Chat messages - scrollable area */}
+      <div className="flex-1 overflow-y-auto bg-gray-50">
+        <div className="p-6 space-y-4">
           {messages.map((message) => (
             <div
               key={message.id}
@@ -269,74 +291,78 @@ export default function ChatInterface() {
               <div
                 className={`${
                   message.role === 'user' 
-                    ? 'max-w-xs md:max-w-sm bg-green-500 text-white rounded-lg rounded-br-none'
-                    : 'max-w-md md:max-w-lg bg-gray-100 text-gray-800 rounded-lg rounded-bl-none'
+                    ? 'max-w-xs md:max-w-md lg:max-w-lg bg-green-500 text-white rounded-2xl rounded-br-md'
+                    : 'max-w-md md:max-w-lg lg:max-w-2xl bg-white text-gray-800 rounded-2xl rounded-bl-md shadow-sm border border-gray-200'
                 } px-4 py-3`}
               >
                 {renderMessageContent(message.content, message.role)}
                 
-                {/* Message timestamp - inside bubble for cleaner look */}
+                {/* Message timestamp */}
                 <div
                   className={`text-xs ${
                     message.role === 'user' ? 'text-green-100' : 'text-gray-500'
-                  } mt-1 text-right`}
+                  } mt-2 text-right`}
                 >
                   {formatTime(message.timestamp)}
                 </div>
               </div>
             </div>
           ))}
-        </div>
 
-        {/* Loading indicator */}
-        {isLoading && (
-          <div className="flex justify-start mt-4">
-            <div className="bg-gray-100 px-4 py-3 rounded-lg rounded-bl-none">
-              <div className="flex space-x-1">
-                <div
-                  className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"
-                  style={{ animationDelay: '0ms' }}
-                ></div>
-                <div
-                  className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"
-                  style={{ animationDelay: '150ms' }}
-                ></div>
-                <div
-                  className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"
-                  style={{ animationDelay: '300ms' }}
-                ></div>
+          {/* Loading indicator */}
+          {isLoading && (
+            <div className="flex justify-start">
+              <div className="bg-white px-4 py-3 rounded-2xl rounded-bl-md shadow-sm border border-gray-200">
+                <div className="flex space-x-1">
+                  <div
+                    className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"
+                    style={{ animationDelay: '0ms' }}
+                  ></div>
+                  <div
+                    className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"
+                    style={{ animationDelay: '150ms' }}
+                  ></div>
+                  <div
+                    className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"
+                    style={{ animationDelay: '300ms' }}
+                  ></div>
+                </div>
               </div>
             </div>
-          </div>
-        )}
-        
-        {/* Auto-scroll anchor */}
-        <div ref={messagesEndRef} />
+          )}
+          
+          {/* Auto-scroll anchor */}
+          <div ref={messagesEndRef} />
+        </div>
       </div>
 
-      {/* Chat input */}
-      <div className="border-t border-gray-200 p-4">
-        <form onSubmit={handleSendMessage} className="flex items-center space-x-2">
-          <input
-            type="text"
-            value={inputMessage}
-            onChange={(e) => setInputMessage(e.target.value)}
-            placeholder="Ask about nutrition, workouts, or health goals..."
-            className="flex-1 border border-gray-300 rounded-full px-4 py-2 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent text-black"
-            disabled={isLoading}
-          />
+      {/* Chat input - fixed at bottom */}
+      <div className="border-t border-gray-200 p-6 bg-white flex-shrink-0">
+        <form onSubmit={handleSendMessage} className="flex items-end space-x-3">
+          <div className="flex-1 relative">
+            <textarea
+              ref={textareaRef}
+              value={inputMessage}
+              onChange={(e) => setInputMessage(e.target.value)}
+              onKeyPress={handleKeyPress}
+              placeholder="Ask about nutrition, workouts, or health goals..."
+              className="w-full border border-gray-300 rounded-2xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent text-black resize-none overflow-hidden min-h-[48px] max-h-[120px]"
+              disabled={isLoading}
+              rows={1}
+            />
+          </div>
           <button
             type="submit"
-            className={`rounded-full p-2 ${
+            className={`rounded-full p-3 flex-shrink-0 ${
               isLoading || inputMessage.trim() === ''
                 ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
                 : 'bg-green-600 text-white hover:bg-green-700'
-            }`}
+            } transition-colors h-12 w-12 flex items-center justify-center`}
             disabled={isLoading || inputMessage.trim() === ''}
           >
             <svg
               xmlns="http://www.w3.org/2000/svg"
-              className="h-6 w-6"
+              className="h-5 w-5"
               fill="none"
               viewBox="0 0 24 24"
               stroke="currentColor"

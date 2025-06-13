@@ -2,7 +2,40 @@
 'use client';
 
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import { User } from '@/types/user';
+
+interface User {
+  id: string;
+  name: string;
+  email: string;
+  age?: number;
+  gender?: string;
+  height?: number;
+  weight?: number;
+  bmi?: number;
+  bmr?: number;
+  tdee?: number;
+  activityLevel?: string;
+  fitnessGoal?: string;
+  primaryGoal?: string;
+  weightGoal?: string;
+  targetWeight?: number;
+  dietaryPreferences?: string[];
+  medicalConditions?: string[];
+  preferredWorkouts?: string[];
+  workoutFrequency?: number;
+  workoutDuration?: number;
+  fitnessLevel?: string;
+  workoutLocation?: string;
+  availableEquipment?: string[];
+  hasTrainer?: boolean;
+  waterIntake?: number;
+  sleepHours?: number;
+  bedtime?: string;
+  wakeupTime?: string;
+  sleepIssues?: string[];
+  otherMedicalCondition?: string;
+  goalTimeline?: string;
+}
 
 type AuthContextType = {
   user: User | null;
@@ -11,19 +44,13 @@ type AuthContextType = {
   register: (userData: RegisterData) => Promise<void>;
   login: (email: string, password: string) => Promise<void>;
   logout: () => Promise<void>;
-  updateProfile: (profileData: UpdateProfileData) => Promise<void>;
-  updateSettings: (settingsData: UpdateSettingsData) => Promise<void>;
+  updateUser: (userData: Partial<User>) => Promise<void>;
 };
 
 type RegisterData = {
   name: string;
   email: string;
   password: string;
-  fitnessGoal?: string;
-  dietaryPreferences?: string[];
-};
-
-type UpdateProfileData = {
   fitnessGoal?: string;
   dietaryPreferences?: string[];
 };
@@ -67,18 +94,38 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     const checkUserLoggedIn = async () => {
       try {
         console.log('🔍 Checking if user is logged in...');
-        // Check if user is already logged in using cookies
+        
+        // First try to get user from localStorage (fallback)
+        const savedUser = localStorage.getItem('user');
+        if (savedUser) {
+          const userData = JSON.parse(savedUser);
+          setUser(userData);
+          console.log('✅ User loaded from localStorage:', userData.name);
+          setLoading(false);
+          return;
+        }
+
+        // Try to fetch from your API endpoint
         const res = await fetch('/api/user/profile');
         const data = await res.json();
   
         if (data.success) {
           console.log('✅ User auto-logged in:', data.user.name);
           setUser(data.user);
+          localStorage.setItem('user', JSON.stringify(data.user));
         } else {
           console.log('ℹ️ No valid session found');
         }
       } catch (error) {
         console.error('❌ Failed to fetch user profile:', error);
+        
+        // If API fails, still check localStorage
+        const savedUser = localStorage.getItem('user');
+        if (savedUser) {
+          const userData = JSON.parse(savedUser);
+          setUser(userData);
+          console.log('✅ User loaded from localStorage (API failed):', userData.name);
+        }
       } finally {
         setLoading(false);
       }
@@ -106,6 +153,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       }
 
       setUser(data.user);
+      localStorage.setItem('user', JSON.stringify(data.user));
     } catch (error) {
       setError((error as Error).message);
       throw error;
@@ -136,6 +184,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
       console.log('✅ Login successful for:', data.user.name);
       setUser(data.user);
+      localStorage.setItem('user', JSON.stringify(data.user));
       
       // Redirect to dashboard after successful login
       window.location.href = '/dashboard';
@@ -154,61 +203,50 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       console.log('🚪 Logging out user');
       await fetch('/api/auth/logout', { method: 'POST' });
       setUser(null);
+      localStorage.removeItem('user');
       window.location.href = '/login';
     } catch (error) {
       console.error('Logout error:', error);
+      // Even if API call fails, clear local state
+      setUser(null);
+      localStorage.removeItem('user');
+      window.location.href = '/login';
     } finally {
       setLoading(false);
     }
   };
 
-  // Update profile
-  const updateProfile = async (profileData: UpdateProfileData) => {
-    setLoading(true);
-    setError(null);
-
-    try {
-      const res = await fetch('/api/user/profile', {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(profileData),
-      });
-
-      const data = await res.json();
-
-      if (!res.ok) {
-        throw new Error(data.message || 'Failed to update profile');
-      }
-
-      setUser(prevUser => prevUser ? { ...prevUser, ...data.user } : data.user);
-    } catch (error) {
-      setError((error as Error).message);
-      throw error;
-    } finally {
-      setLoading(false);
+  // Update user function for profile editing
+  const updateUser = async (userData: Partial<User>) => {
+    if (!user) {
+      throw new Error('No user logged in');
     }
-  };
 
-  // Update settings
-  const updateSettings = async (settingsData: UpdateSettingsData) => {
     setLoading(true);
     setError(null);
 
     try {
-      const res = await fetch('/api/user/settings', {
+      console.log('🔄 Updating user profile via backend...');
+      
+      const response = await fetch(`http://127.0.0.1:8000/update-user/${user.id}`, {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(settingsData),
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(userData),
       });
 
-      const data = await res.json();
-
-      if (!res.ok) {
-        throw new Error(data.message || 'Failed to update settings');
+      if (!response.ok) {
+        throw new Error('Backend update failed');
       }
 
-      setUser(prevUser => prevUser ? { ...prevUser, ...data.user } : data.user);
+      const updatedUser = await response.json();
+      setUser(updatedUser);
+      localStorage.setItem('user', JSON.stringify(updatedUser));
+      console.log('✅ Profile updated successfully');
+
     } catch (error) {
+      console.error('❌ Failed to update profile:', error);
       setError((error as Error).message);
       throw error;
     } finally {
@@ -225,8 +263,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         register,
         login,
         logout,
-        updateProfile,
-        updateSettings,
+        updateUser
       }}
     >
       {children}
