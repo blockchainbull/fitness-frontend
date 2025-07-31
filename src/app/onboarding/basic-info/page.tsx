@@ -272,8 +272,12 @@ const BasicInfoPage: React.FC<BasicInfoPageProps> = ({
       if (onNext) {
         onNext(updatedUserData);
       } else {
-        // Default navigation behavior
-        router.push('/onboarding/primary-health-goal');
+        // Check if user is female to determine next step
+        if (updatedUserData.gender === 'Female') {
+          router.push('/onboarding/period-cycle');
+        } else {
+          router.push('/onboarding/primary-health-goal');
+        }
       }
     }
   };

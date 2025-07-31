@@ -3,6 +3,8 @@
 
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 
+
+
 interface User {
   id: string;
   name: string;
@@ -82,6 +84,9 @@ type UpdateSettingsData = {
     measurementUnit: string;
   };
 };
+
+
+
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
@@ -226,8 +231,18 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     setError(null);
 
     try {
-      console.log('🔄 Updating user profile via backend...');
+      console.log('🔄 Updating user with:', userData);
       
+      // If userData contains the full updated user object (from backend response)
+      if (userData.id && userData.name && userData.email) {
+        // This is a complete user object from backend
+        setUser(userData as User);
+        localStorage.setItem('user', JSON.stringify(userData));
+        console.log('✅ User state updated with complete object');
+        return;
+      }
+      
+      // Otherwise, make API call to update partial data
       const response = await fetch(`http://127.0.0.1:8000/update-user/${user.id}`, {
         method: 'PUT',
         headers: {
@@ -241,12 +256,13 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       }
 
       const updatedUser = await response.json();
+      console.log('✅ Received updated user from backend:', updatedUser);
+      
       setUser(updatedUser);
       localStorage.setItem('user', JSON.stringify(updatedUser));
-      console.log('✅ Profile updated successfully');
 
     } catch (error) {
-      console.error('❌ Failed to update profile:', error);
+      console.error('❌ Failed to update user:', error);
       setError((error as Error).message);
       throw error;
     } finally {

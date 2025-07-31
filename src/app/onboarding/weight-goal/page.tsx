@@ -20,7 +20,7 @@ interface TimelineOption {
 }
 
 interface WeightGoalPageProps {
-  currentWeight?: number; // Get from previous step
+  currentWeight?: number;
   onNext?: (data: WeightGoalData) => void;
   onBack?: () => void;
   showBackButton?: boolean;
@@ -40,7 +40,7 @@ const WeightGoalPage: React.FC<WeightGoalPageProps> = ({
   showBackButton = true
 }) => {
   const router = useRouter();
-  const { updateOnboardingData, getCurrentWeight } = useOnboarding(); 
+  const { updateOnboardingData, getCurrentWeight, data } = useOnboarding(); 
   const [selectedGoal, setSelectedGoal] = useState<string>('');
   const [targetWeight, setTargetWeight] = useState<string>('');
   const [selectedTimeline, setSelectedTimeline] = useState<string>('');
@@ -48,23 +48,69 @@ const WeightGoalPage: React.FC<WeightGoalPageProps> = ({
   const [weightError, setWeightError] = useState<string>('');
   const actualCurrentWeight = getCurrentWeight() || currentWeight || 70;
 
+  // FIXED: Helper function to map primary goals to weight goals
+  const getPredefinedWeightGoal = (primaryGoal: string): string => {
+    const goalMapping: Record<string, string> = {
+      'lose_weight': 'lose_weight',
+      'build_muscle': 'gain_weight', 
+      'improve_fitness': 'maintain_weight',
+      'maintain_health': 'maintain_weight',
+      'reduce_stress': 'maintain_weight'
+    };
+    
+    return goalMapping[primaryGoal] || '';
+  };
+
+  // FIXED: Safe function to get goal descriptions
+  const getGoalDescription = (goalId: string): string => {
+    const descriptions: Record<string, string> = {
+      'lose_weight': 'Burn fat and reduce overall weight',
+      'maintain_weight': 'Stay at your current weight while improving composition',
+      'gain_weight': 'Add healthy weight and muscle mass to your frame'
+    };
+    
+    const baseDescription = descriptions[goalId] || '';
+    
+    // FIXED: Safely check if this goal was pre-selected
+    if (goalId === selectedGoal && data.primaryGoal && selectedGoal) {
+      const predefinedGoal = getPredefinedWeightGoal(data.primaryGoal);
+      if (predefinedGoal === goalId) {
+        return `${baseDescription} (Recommended based on your primary goal)`;
+      }
+    }
+    
+    return baseDescription;
+  };
+
+  // FIXED: Initialize selectedGoal based on primary goal
+  useEffect(() => {
+    if (data.primaryGoal && !selectedGoal) {
+      const predefinedGoal = getPredefinedWeightGoal(data.primaryGoal);
+      if (predefinedGoal) {
+        setSelectedGoal(predefinedGoal);
+        console.log(`Auto-selected weight goal: ${predefinedGoal} based on primary goal: ${data.primaryGoal}`);
+      }
+    }
+  }, [data.primaryGoal, selectedGoal]);
+
+  // FIXED: Updated weight goal options with safe description function
   const weightGoalOptions: WeightGoalOption[] = [
     {
       id: 'lose_weight',
       title: 'Lose Weight',
-      description: 'Burn fat and reduce overall weight',
+      description: getGoalDescription('lose_weight'),
       icon: <TrendingDown className="w-6 h-6" />
     },
     {
       id: 'maintain_weight',
       title: 'Maintain Weight',
-      description: 'Stay at your current weight',
+      description: getGoalDescription('maintain_weight'),
       icon: <ArrowRight className="w-6 h-6" />
     },
     {
       id: 'gain_weight',
       title: 'Gain Weight',
-      description: 'Add healthy weight to your frame',
+      description: getGoalDescription('gain_weight'),
       icon: <TrendingUp className="w-6 h-6" />
     }
   ];
@@ -102,6 +148,13 @@ const WeightGoalPage: React.FC<WeightGoalPageProps> = ({
     }
   }, [targetWeight, actualCurrentWeight, selectedGoal]);
 
+  // Auto-set target weight when maintain weight is selected
+  useEffect(() => {
+    if (selectedGoal === 'maintain_weight') {
+      setTargetWeight(actualCurrentWeight.toString());
+    }
+  }, [selectedGoal, actualCurrentWeight]);
+
   const validateTargetWeight = (target: number) => {
     setWeightError('');
     
@@ -117,13 +170,6 @@ const WeightGoalPage: React.FC<WeightGoalPageProps> = ({
       setWeightError('Target weight seems too high. Please enter a realistic weight');
     }
   };
-
-  // Auto-set target weight when maintain weight is selected
-  useEffect(() => {
-    if (selectedGoal === 'maintain_weight') {
-      setTargetWeight(actualCurrentWeight.toString());
-    }
-  }, [selectedGoal, actualCurrentWeight]);
 
   const handleGoalSelect = (goalId: string) => {
     setSelectedGoal(goalId);
@@ -212,7 +258,7 @@ const WeightGoalPage: React.FC<WeightGoalPageProps> = ({
       onNext(data);
     } else {
       // Default navigation behavior
-      router.push('/onboarding/sleep-info'); // or whatever your next step is
+      router.push('/onboarding/sleep-info');
     }
   };
 

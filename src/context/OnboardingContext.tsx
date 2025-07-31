@@ -15,6 +15,15 @@ interface BasicInfo {
   tdee: number;
 }
 
+interface PeriodCycle {
+  hasPeriods: boolean;
+  lastPeriodDate?: string;
+  cycleLength?: number;
+  cycleLengthRegular?: boolean;
+  pregnancyStatus?: string;
+  trackingPreference: string;
+}
+
 interface WeightGoal {
   weightGoal: string;
   targetWeight: number;
@@ -51,6 +60,7 @@ interface ExerciseSetup {
 
 interface OnboardingData {
   basicInfo?: BasicInfo;
+  periodCycle?: PeriodCycle;
   primaryGoal?: string;
   weightGoal?: WeightGoal;
   sleepInfo?: SleepInfo;
@@ -61,8 +71,10 @@ interface OnboardingData {
 
 interface OnboardingContextType {
   onboardingData: OnboardingData;
+  data: OnboardingData,
   updateOnboardingData: (step: keyof OnboardingData, data: any) => void;
   getCurrentWeight: () => number | null;
+  isUserFemale: () => boolean;
   completeOnboarding: () => Promise<any>;
   clearOnboardingData: () => void;
 }
@@ -87,6 +99,10 @@ export const OnboardingProvider = ({ children }: { children: ReactNode }) => {
 
   const getCurrentWeight = () => {
     return onboardingData.basicInfo?.weight || null;
+  };
+
+  const isUserFemale = () => {
+    return onboardingData.basicInfo?.gender === 'Female';
   };
 
   const completeOnboarding = async () => {
@@ -143,8 +159,10 @@ export const OnboardingProvider = ({ children }: { children: ReactNode }) => {
   return (
     <OnboardingContext.Provider value={{ 
       onboardingData, 
+      data: onboardingData,
       updateOnboardingData, 
       getCurrentWeight,
+      isUserFemale,
       completeOnboarding,
       clearOnboardingData
     }}>

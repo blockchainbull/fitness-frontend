@@ -3,19 +3,13 @@
 
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { Moon, Sun, X } from 'lucide-react';
+import { Moon, Sun } from 'lucide-react';
 import { useOnboarding } from '@/context/OnboardingContext';
+import EnhancedTimePicker from '@/components/EnchancedTimePicker'; 
 
 interface SleepIssue {
   id: string;
   label: string;
-}
-
-interface SleepInfoData {
-  sleepHours: number;
-  bedtime: string;
-  wakeupTime: string;
-  sleepIssues: string[];
 }
 
 interface SleepInfoPageProps {
@@ -24,152 +18,12 @@ interface SleepInfoPageProps {
   showBackButton?: boolean;
 }
 
-interface TimePickerProps {
-  isOpen: boolean;
-  onClose: () => void;
-  onTimeSelect: (time: string) => void;
-  initialTime: string;
-  title: string;
+interface SleepInfoData {
+  sleepHours: number;
+  bedtime: string;
+  wakeupTime: string;
+  sleepIssues: string[];
 }
-
-const TimePicker: React.FC<TimePickerProps> = ({ isOpen, onClose, onTimeSelect, initialTime, title }) => {
-  const [selectedHour, setSelectedHour] = useState<number>(12);
-  const [selectedMinute, setSelectedMinute] = useState<number>(0);
-  const [isAM, setIsAM] = useState<boolean>(true);
-
-  useEffect(() => {
-    if (initialTime && isOpen) {
-      const [time, period] = initialTime.split(' ');
-      const [hour, minute] = time.split(':').map(Number);
-      setSelectedHour(hour);
-      setSelectedMinute(minute);
-      setIsAM(period === 'AM');
-    }
-  }, [initialTime, isOpen]);
-
-  const handleConfirm = () => {
-    const period = isAM ? 'AM' : 'PM';
-    const formattedTime = `${selectedHour}:${selectedMinute.toString().padStart(2, '0')} ${period}`;
-    onTimeSelect(formattedTime);
-    onClose();
-  };
-
-  const handleHourChange = (value: string) => {
-    const hour = parseInt(value);
-    if (!isNaN(hour) && hour >= 1 && hour <= 12) {
-      setSelectedHour(hour);
-    }
-  };
-
-  if (!isOpen) return null;
-
-  return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <div className="bg-white rounded-lg p-6 w-80">
-        <h3 className="text-lg font-semibold mb-6 text-center text-gray-800">{title}</h3>
-        
-        <div className="flex items-center justify-center space-x-4 mb-6">
-          {/* Hour Input */}
-          <input
-            type="number"
-            min="1"
-            max="12"
-            value={selectedHour}
-            onChange={(e) => handleHourChange(e.target.value)}
-            className="text-6xl font-bold text-gray-900 w-20 text-center border-none outline-none bg-transparent"
-          />
-          
-          <div className="text-6xl font-bold text-gray-900">:</div>
-          
-          {/* Minute */}
-          <div className="bg-blue-600 text-white text-6xl font-bold px-4 py-2 rounded-lg">
-            {selectedMinute.toString().padStart(2, '0')}
-          </div>
-          
-          {/* AM/PM Toggle */}
-          <div className="flex flex-col space-y-2">
-            <button
-              onClick={() => setIsAM(true)}
-              className={`px-3 py-2 rounded text-sm font-semibold ${
-                isAM ? 'bg-cyan-400 text-white' : 'bg-gray-200 text-gray-700'
-              }`}
-            >
-              AM
-            </button>
-            <button
-              onClick={() => setIsAM(false)}
-              className={`px-3 py-2 rounded text-sm font-semibold ${
-                !isAM ? 'bg-cyan-400 text-white' : 'bg-gray-200 text-gray-700'
-              }`}
-            >
-              PM
-            </button>
-          </div>
-        </div>
-
-        {/* Minute Selector Circle */}
-        <div className="relative w-48 h-48 mx-auto mb-6">
-          <div className="absolute inset-0 border-2 border-gray-200 rounded-full bg-gray-50">
-            {/* Minute markers */}
-            {[0, 5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 55].map((minute) => {
-              const angle = (minute / 60) * 360 - 90; // Start from top (12 o'clock)
-              const radius = 80;
-              const x = Math.cos((angle * Math.PI) / 180) * radius + 96;
-              const y = Math.sin((angle * Math.PI) / 180) * radius + 96;
-              
-              return (
-                <button
-                  key={minute}
-                  onClick={() => setSelectedMinute(minute)}
-                  className={`absolute w-8 h-8 rounded-full text-xs font-semibold transform -translate-x-1/2 -translate-y-1/2 ${
-                    selectedMinute === minute
-                      ? 'bg-blue-600 text-white'
-                      : 'bg-white text-gray-800 hover:bg-gray-100 border border-gray-300'
-                  }`}
-                  style={{ left: x, top: y }}
-                >
-                  {minute.toString().padStart(2, '0')}
-                </button>
-              );
-            })}
-            
-            {/* Center dot */}
-            <div className="absolute top-1/2 left-1/2 w-3 h-3 bg-blue-600 rounded-full transform -translate-x-1/2 -translate-y-1/2 z-10"></div>
-            
-            {/* Line to selected minute - Fixed positioning */}
-            <div 
-              className="absolute bg-blue-600 z-5"
-              style={{ 
-                width: '2px',
-                height: '80px',
-                left: '50%',
-                top: '50%',
-                transformOrigin: 'bottom center',
-                transform: `translate(-50%, -100%) rotate(${(selectedMinute / 60) * 360}deg)`
-              }}
-            ></div>
-          </div>
-        </div>
-
-        {/* Action Buttons */}
-        <div className="flex justify-between">
-          <button
-            onClick={onClose}
-            className="px-6 py-2 text-blue-600 font-semibold hover:bg-blue-50 rounded"
-          >
-            Cancel
-          </button>
-          <button
-            onClick={handleConfirm}
-            className="px-6 py-2 bg-blue-600 text-white font-semibold rounded hover:bg-blue-700"
-          >
-            OK
-          </button>
-        </div>
-      </div>
-    </div>
-  );
-};
 
 const SleepInfoPage: React.FC<SleepInfoPageProps> = ({
   onNext,
@@ -223,11 +77,10 @@ const SleepInfoPage: React.FC<SleepInfoPageProps> = ({
     return `${displayHours}:${mins.toString().padStart(2, '0')} ${period}`;
   };
 
-  // Update wake up time when bedtime or sleep hours change
+  // Auto-update wake up time when bedtime or sleep hours change
   useEffect(() => {
     const bedtimeMinutes = timeToMinutes(bedtime);
-    const sleepMinutes = sleepHours * 60;
-    const wakeupMinutes = bedtimeMinutes + sleepMinutes;
+    const wakeupMinutes = bedtimeMinutes + (sleepHours * 60);
     const newWakeupTime = minutesToTime(wakeupMinutes);
     setWakeupTime(newWakeupTime);
   }, [bedtime, sleepHours]);
@@ -241,14 +94,20 @@ const SleepInfoPage: React.FC<SleepInfoPageProps> = ({
       // If "None" is selected, clear all other selections
       setSelectedIssues(selectedIssues.includes('none') ? [] : ['none']);
     } else {
-      // Remove "None" if another issue is selected
-      const filteredIssues = selectedIssues.filter(id => id !== 'none');
+      // If any other issue is selected, remove "None" if it was selected
+      let newIssues = [...selectedIssues];
       
-      if (filteredIssues.includes(issueId)) {
-        setSelectedIssues(filteredIssues.filter(id => id !== issueId));
-      } else {
-        setSelectedIssues([...filteredIssues, issueId]);
+      if (newIssues.includes('none')) {
+        newIssues = newIssues.filter(id => id !== 'none');
       }
+      
+      if (newIssues.includes(issueId)) {
+        newIssues = newIssues.filter(id => id !== issueId);
+      } else {
+        newIssues.push(issueId);
+      }
+      
+      setSelectedIssues(newIssues);
     }
   };
 
@@ -267,7 +126,7 @@ const SleepInfoPage: React.FC<SleepInfoPageProps> = ({
     if (onNext) {
       onNext(data);
     } else {
-      router.push('/onboarding/dietary-preferences'); // or next step
+      router.push('/onboarding/dietary-preferences');
     }
   };
 
@@ -347,7 +206,7 @@ const SleepInfoPage: React.FC<SleepInfoPageProps> = ({
             <h3 className="text-lg font-semibold text-gray-900 mb-3">Bedtime</h3>
             <button
               onClick={() => setShowBedtimePicker(true)}
-              className="w-full p-4 bg-gray-50 border border-gray-200 rounded-lg flex items-center space-x-3 hover:bg-gray-100 transition-colors"
+              className="w-full p-4 bg-gray-50 border border-gray-200 rounded-lg flex items-center space-x-3 hover:bg-gray-100 transition-colors focus:ring-2 focus:ring-blue-500 focus:border-transparent"
             >
               <Moon className="w-6 h-6 text-blue-600" />
               <span className="text-lg font-semibold text-gray-900">{bedtime}</span>
@@ -358,7 +217,7 @@ const SleepInfoPage: React.FC<SleepInfoPageProps> = ({
             <h3 className="text-lg font-semibold text-gray-900 mb-3">Wake up time</h3>
             <button
               onClick={() => setShowWakeupPicker(true)}
-              className="w-full p-4 bg-gray-50 border border-gray-200 rounded-lg flex items-center space-x-3 hover:bg-gray-100 transition-colors"
+              className="w-full p-4 bg-gray-50 border border-gray-200 rounded-lg flex items-center space-x-3 hover:bg-gray-100 transition-colors focus:ring-2 focus:ring-blue-500 focus:border-transparent"
             >
               <Sun className="w-6 h-6 text-orange-500" />
               <span className="text-lg font-semibold text-gray-900">{wakeupTime}</span>
@@ -393,7 +252,6 @@ const SleepInfoPage: React.FC<SleepInfoPageProps> = ({
 
         {/* Navigation Buttons */}
         <div className="flex justify-end items-center mt-8">
-          
           <button 
             onClick={handleSubmit}
             className="px-8 py-3 bg-blue-500 text-white font-semibold rounded-lg hover:bg-blue-600 transition-colors"
@@ -403,21 +261,21 @@ const SleepInfoPage: React.FC<SleepInfoPageProps> = ({
         </div>
       </div>
 
-      {/* Time Pickers */}
-      <TimePicker
+      {/* Enhanced Time Pickers */}
+      <EnhancedTimePicker
         isOpen={showBedtimePicker}
         onClose={() => setShowBedtimePicker(false)}
         onTimeSelect={setBedtime}
         initialTime={bedtime}
-        title="Select time"
+        title="Select Bedtime"
       />
       
-      <TimePicker
+      <EnhancedTimePicker
         isOpen={showWakeupPicker}
         onClose={() => setShowWakeupPicker(false)}
         onTimeSelect={setWakeupTime}
         initialTime={wakeupTime}
-        title="Select time"
+        title="Select Wake Up Time"
       />
 
       {/* Custom Slider Styles */}
