@@ -1,3 +1,4 @@
+// src/app/onboarding/period-cycle/page.tsx
 "use client"
 
 import React, { useState } from 'react';
@@ -62,7 +63,16 @@ const PeriodCyclePage: React.FC<PeriodCyclePageProps> = ({
       trackingPreference
     };
 
-    console.log('Period cycle data:', data);
+    // Enhanced debugging for backend compatibility
+    console.log('🌸 Period cycle data being saved to context:', data);
+    console.log('📝 Data types check:', {
+      hasPeriods: typeof data.hasPeriods,
+      lastPeriodDate: typeof data.lastPeriodDate,
+      cycleLength: typeof data.cycleLength,
+      cycleLengthRegular: typeof data.cycleLengthRegular,
+      pregnancyStatus: typeof data.pregnancyStatus,
+      trackingPreference: typeof data.trackingPreference
+    });
 
     updateOnboardingData('periodCycle', data);
 
@@ -81,6 +91,7 @@ const PeriodCyclePage: React.FC<PeriodCyclePageProps> = ({
     }
   };
 
+  // Enhanced form validation
   const isFormValid = hasPeriods !== null && trackingPreference && 
     (!hasPeriods || (lastPeriodDate && pregnancyStatus));
 
@@ -186,6 +197,7 @@ const PeriodCyclePage: React.FC<PeriodCyclePageProps> = ({
                   value={lastPeriodDate}
                   onChange={(e) => setLastPeriodDate(e.target.value)}
                   className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 text-black focus:border-transparent outline-none"
+                  required={hasPeriods === true}
                 />
               </div>
             </div>

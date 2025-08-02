@@ -1,3 +1,4 @@
+// src/context/OnboaridngContext.tsx
 'use client';
 import React, { createContext, useContext, useState, ReactNode } from 'react';
 
@@ -108,7 +109,7 @@ export const OnboardingProvider = ({ children }: { children: ReactNode }) => {
   const completeOnboarding = async () => {
     try {
       // Call your backend API directly instead of Next.js API routes
-      const response = await fetch('http://localhost:8000/api/onboarding/complete', {  // Updated URL
+      const response = await fetch('http://localhost:8000/api/health/onboarding/complete', {  
         method: 'POST',
         headers: { 
           'Content-Type': 'application/json',

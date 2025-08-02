@@ -4,7 +4,6 @@
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { FaDumbbell, FaHome, FaTree, FaBriefcase, FaStore } from 'react-icons/fa';
-import { MdFitnessCenter } from 'react-icons/md';
 import { Check } from 'lucide-react';
 import { useOnboarding } from '@/context/OnboardingContext';
 
